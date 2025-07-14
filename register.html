@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Registro | SIGEP-GC</title>
+  <link rel="icon" href="./assets/logoglassico.ico" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: url('./assets/fondo.png') center/cover no-repeat fixed;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: #333;
+      backdrop-filter: brightness(0.95);
+    }
+
+    .form-container {
+      background-color: rgba(255, 255, 255, 0.95);
+      padding: 40px;
+      border-radius: 1.5rem;
+      box-shadow: 0 0 30px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 420px;
+      animation: fadeInDown 0.8s ease;
+      text-align: center;
+    }
+
+    .logo-container {
+      margin-bottom: 20px;
+    }
+
+    .logo {
+      width: 120px;
+      filter: drop-shadow(0 0 8px rgba(0,0,0,0.2));
+    }
+
+    .sistema-nombre {
+      font-weight: 800;
+      font-size: 1.5rem;
+      margin: 0;
+      background: linear-gradient(to right, #0d6efd, #20c997);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .sistema-descripcion {
+      font-size: 0.9rem;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    h2 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    form input,
+    form select {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 0.6rem;
+      font-size: 0.95rem;
+      transition: border 0.3s, box-shadow 0.3s;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: #20c997;
+      box-shadow: 0 0 0 0.2rem rgba(32, 201, 151, 0.25);
+      outline: none;
+    }
+
+    label {
+      text-align: left;
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+      margin-top: 5px;
+    }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(to right, #0d6efd, #20c997);
+      color: white;
+      border: none;
+      border-radius: 0.6rem;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    button[type="submit"]:hover {
+      transform: scale(1.03);
+      box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+    }
+
+    p {
+      margin-top: 15px;
+      font-size: 0.9rem;
+    }
+
+    a {
+      color: #0d6efd;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 480px) {
+      .form-container {
+        padding: 25px;
+        border-radius: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <div class="logo-container">
+      <img src="./assets/logoglass.png" alt="Logo Glass Caribe" class="logo">
+      <h1 class="sistema-nombre">SIGEP-GC</h1>
+      <p class="sistema-descripcion">Sistema de Gestión de Pedidos - Glass Caribe</p>
+    </div>
+
+    <h2>Crear cuenta</h2>
+
+    <form id="registerForm">
+      <input type="text" id="nombre" placeholder="Nombre completo" required>
+      <input type="email" id="email" placeholder="Correo electrónico" required>
+      <input type="password" id="password" placeholder="Contraseña" required>
+
+      <label for="departamento">Selecciona tu departamento:</label>
+      <select id="departamento" required>
+        <option value="" disabled selected>Elige una opción</option>
+        <option value="ventas">Ventas</option>
+        <option value="contabilidad">Contabilidad</option>
+        <option value="produccion">Producción</option>
+      </select>
+
+      <div id="rolSelector" style="display: none;">
+        <label for="role_id">Rol del nuevo usuario:</label>
+        <select id="role_id">
+          <option value="2">Colaborador</option>
+          <option value="1">Administrador</option>
+        </select>
+      </div>
+
+      <button type="submit">Registrar</button>
+      <p>¿Ya tienes cuenta? <a href="login.html">Inicia sesión</a></p>
+    </form>
+  </div>
+
+  <script type="module" src="./js/register.js"></script>
+</body>
+</html>
