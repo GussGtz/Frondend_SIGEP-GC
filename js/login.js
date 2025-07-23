@@ -7,16 +7,15 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
   const password = document.getElementById('password').value.trim();
 
   if (!email || !password) {
-    Swal.fire({
+    return Swal.fire({
       icon: 'warning',
       title: 'Campos vacíos',
       text: 'Por favor, completa todos los campos.',
     });
-    return;
   }
 
   try {
-    const res = await fetch('http://localhost:3000/api/auth/login', {
+    const res = await fetch('https://backend-sigep-gc.onrender.com/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
@@ -25,6 +24,8 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     const data = await res.json();
 
     if (res.ok) {
+      guardarToken(data.token);
+
       Swal.fire({
         icon: 'success',
         title: 'Bienvenido',
@@ -33,7 +34,6 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         showConfirmButton: false,
       });
 
-      guardarToken(data.token);
       setTimeout(() => {
         window.location.href = 'index.html';
       }, 1600);
@@ -41,7 +41,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
       Swal.fire({
         icon: 'error',
         title: 'Error de inicio de sesión',
-        text: data.msg || 'Correo o contraseña incorrectos',
+        text: data.message || 'Correo o contraseña incorrectos.',
       });
     }
   } catch (error) {

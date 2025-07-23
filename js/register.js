@@ -4,20 +4,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   const token = obtenerToken();
   const rolSelector = document.getElementById('rolSelector');
 
+  // Mostrar selector de rol solo si el usuario es administrador
   if (token) {
     try {
-      const resUser = await fetch('http://localhost:3000/api/auth/me', {
+      const resUser = await fetch('https://backend-sigep-gc.onrender.com/api/auth/me', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const user = await resUser.json();
-      if (user.role_id === 1) {
-        rolSelector.style.display = 'block'; // Mostrar selector solo a admins
+      if (resUser.ok && user.role_id === 1) {
+        rolSelector.style.display = 'block';
       }
     } catch (err) {
       console.error('⚠️ No se pudo verificar el rol del usuario', err);
     }
   }
 
+  // Manejar el registro
   document.getElementById('registerForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -39,7 +41,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
-      const res = await fetch('http://localhost:3000/api/auth/register', {
+      const res = await fetch('https://backend-sigep-gc.onrender.com/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nombre, email, password, role_id, departamento })

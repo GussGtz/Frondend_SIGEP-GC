@@ -1,12 +1,13 @@
 import { obtenerToken } from './auth.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
+  const API_URL = 'https://backend-sigep-gc.onrender.com';
   const token = obtenerToken();
   if (!token) return window.location.href = 'login.html';
 
   const headers = { Authorization: `Bearer ${token}` };
 
-  const resUser = await fetch('http://localhost:3000/api/auth/me', { headers });
+  const resUser = await fetch(`${API_URL}/api/auth/me`, { headers });
   if (!resUser.ok) {
     localStorage.removeItem('token');
     return window.location.href = 'login.html';
@@ -26,7 +27,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (!numero_pedido || !fecha_entrega) return alert('Por favor, completa todos los campos.');
 
-      const res = await fetch('http://localhost:3000/api/pedidos', {
+      const res = await fetch(`${API_URL}/api/pedidos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ numero_pedido, fecha_entrega })
@@ -48,7 +49,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
       if (confirmacion.isConfirmed) {
-        const res = await fetch('http://localhost:3000/api/pedidos/completados', {
+        const res = await fetch(`${API_URL}/api/pedidos/completados`, {
           method: 'DELETE',
           headers
         });
@@ -69,7 +70,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   async function cargarPedidos(filtro = 'todos') {
-    const url = new URL('http://localhost:3000/api/pedidos');
+    const url = new URL(`${API_URL}/api/pedidos`);
     if (filtro !== 'todos') url.searchParams.append('completado', filtro);
 
     const resPedidos = await fetch(url.toString(), { headers });
@@ -136,7 +137,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const pedidoId = e.target.dataset.id;
         const nuevoEstatus = e.target.value;
 
-        const res = await fetch(`http://localhost:3000/api/pedidos/estatus/${pedidoId}`, {
+        const res = await fetch(`${API_URL}/api/pedidos/estatus/${pedidoId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
           body: JSON.stringify({ area: userDepartamento, estatus: nuevoEstatus })
@@ -160,7 +161,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         comentarioPedidoId = btn.dataset.id;
         comentarioArea = btn.dataset.area;
 
-        const res = await fetch(`http://localhost:3000/api/pedidos/comentario/${comentarioPedidoId}`, { headers });
+        const res = await fetch(`${API_URL}/api/pedidos/comentario/${comentarioPedidoId}`, { headers });
         const data = await res.json();
 
         const textareaTodos = document.getElementById('comentarioTexto');
@@ -197,7 +198,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           });
 
           if (confirmacion.isConfirmed) {
-            const res = await fetch(`http://localhost:3000/api/pedidos/${pedidoId}`, {
+            const res = await fetch(`${API_URL}/api/pedidos/${pedidoId}`, {
               method: 'DELETE',
               headers
             });
@@ -224,85 +225,78 @@ document.addEventListener('DOMContentLoaded', async () => {
     cargarPedidos(e.target.value);
   });
 
-  // ✅ Exportar PDF con solo columnas esenciales
   document.getElementById('btnExportarPDF').addEventListener('click', () => {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
 
-  // 🔹 Fecha de generación
-  const fecha = new Date();
-  const fechaFormateada = fecha.toLocaleString('es-MX', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+    const fecha = new Date();
+    const fechaFormateada = fecha.toLocaleString('es-MX', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    doc.setFontSize(16);
+    doc.setTextColor(40, 40, 40);
+    doc.setFont('helvetica', 'bold');
+    doc.text('LISTADO DE PEDIDOS DE GLASS CARIBE', 105, 20, { align: 'center' });
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100);
+    doc.text(`Generado el ${fechaFormateada}`, 105, 28, { align: 'center' });
+
+    const tabla = document.querySelector('#tablaPedidos');
+    const filas = Array.from(tabla.querySelectorAll('tbody tr')).map(tr => {
+      const celdas = tr.querySelectorAll('td');
+      return [
+        celdas[1]?.textContent || '',
+        celdas[2]?.textContent || '',
+        celdas[3]?.textContent || '',
+        celdas[4]?.textContent || '',
+        celdas[5]?.textContent || '',
+        celdas[6]?.textContent || '',
+      ];
+    });
+
+    doc.autoTable({
+      startY: 35,
+      head: [['Número', 'Creación', 'Entrega', 'Ventas', 'Contabilidad', 'Producción']],
+      body: filas,
+      styles: {
+        font: 'helvetica',
+        fontSize: 9,
+        textColor: 20,
+        cellPadding: 3
+      },
+      headStyles: {
+        fillColor: [13, 110, 253],
+        textColor: [255, 255, 255],
+        fontSize: 10,
+        halign: 'center'
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245]
+      }
+    });
+
+    doc.save(`Listado_Pedidos_GlassCaribe_${fecha.toLocaleDateString('es-MX')}.pdf`);
   });
-
-  // 🔹 Título
-  doc.setFontSize(16);
-  doc.setTextColor(40, 40, 40);
-  doc.setFont('helvetica', 'bold');
-  doc.text('LISTADO DE PEDIDOS DE GLASS CARIBE', 105, 20, { align: 'center' });
-
-  // 🔹 Fecha
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(100);
-  doc.text(`Generado el ${fechaFormateada}`, 105, 28, { align: 'center' });
-
-  // 🔹 Tabla de pedidos
-  const tabla = document.querySelector('#tablaPedidos');
-  const filas = Array.from(tabla.querySelectorAll('tbody tr')).map(tr => {
-    const celdas = tr.querySelectorAll('td');
-    return [
-      celdas[1]?.textContent || '', // Número
-      celdas[2]?.textContent || '', // Creación
-      celdas[3]?.textContent || '', // Entrega
-      celdas[4]?.textContent || '', // Ventas
-      celdas[5]?.textContent || '', // Contabilidad
-      celdas[6]?.textContent || '', // Producción
-    ];
-  });
-
-  doc.autoTable({
-    startY: 35,
-    head: [['Número', 'Creación', 'Entrega', 'Ventas', 'Contabilidad', 'Producción']],
-    body: filas,
-    styles: {
-      font: 'helvetica',
-      fontSize: 9,
-      textColor: 20,
-      cellPadding: 3
-    },
-    headStyles: {
-      fillColor: [13, 110, 253],
-      textColor: [255, 255, 255],
-      fontSize: 10,
-      halign: 'center'
-    },
-    alternateRowStyles: {
-      fillColor: [245, 245, 245]
-    }
-  });
-
-  doc.save(`Listado_Pedidos_GlassCaribe_${fecha.toLocaleDateString('es-MX')}.pdf`);
-});
-
 
   document.getElementById('logoutBtn').addEventListener('click', () => {
     localStorage.removeItem('token');
     window.location.href = 'login.html';
   });
 
-  // ===================== Comentarios ==========================
   let comentarioPedidoId = null;
   let comentarioArea = null;
 
   document.getElementById('guardarComentario').addEventListener('click', async () => {
     const comentario = document.getElementById('nuevoComentario').value.trim();
 
-    const res = await fetch(`http://localhost:3000/api/pedidos/comentario/${comentarioPedidoId}/${comentarioArea}`, {
+    const res = await fetch(`${API_URL}/api/pedidos/comentario/${comentarioPedidoId}/${comentarioArea}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -318,7 +312,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   document.getElementById('eliminarComentario').addEventListener('click', async () => {
-    const res = await fetch(`http://localhost:3000/api/pedidos/comentario/${comentarioPedidoId}/${comentarioArea}`, {
+    const res = await fetch(`${API_URL}/api/pedidos/comentario/${comentarioPedidoId}/${comentarioArea}`, {
       method: 'DELETE',
       headers
     });
