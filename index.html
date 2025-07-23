@@ -111,6 +111,16 @@
       margin-right: 8px;
     }
 
+    .filtro-botones {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    #btnEliminarCompletados {
+      background-color: #dc3545;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
@@ -147,6 +157,7 @@
       form { flex-direction: column; align-items: center; }
       .filtro-container { flex-direction: column; align-items: flex-start; }
       #logoutBtn { float: none; width: 100%; margin-bottom: 20px; }
+      .filtro-botones { width: 100%; justify-content: flex-start; }
     }
   </style>
 </head>
@@ -182,7 +193,15 @@
           <option value="false">Pendientes</option>
         </select>
       </div>
-      <button id="btnExportarPDF"><i class="bi bi-download me-1"></i> Descargar PDF</button>
+
+      <div class="filtro-botones">
+        <button id="btnEliminarCompletados" style="display: none;">
+          <i class="bi bi-trash-fill me-1"></i> Eliminar completados
+        </button>
+        <button id="btnExportarPDF">
+          <i class="bi bi-download me-1"></i> Descargar PDF
+        </button>
+      </div>
     </div>
 
     <table id="tablaPedidos">
@@ -196,12 +215,33 @@
           <th>Contabilidad</th>
           <th>Producción</th>
           <th>Actualizar</th>
+          <th>Comentarios</th>
         </tr>
       </thead>
       <tbody id="cuerpoTabla"></tbody>
     </table>
   </div>
 
+  <!-- ✅ Modal Comentarios mejorado -->
+  <div id="comentarioModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.3); z-index:1000;">
+    <div style="background:white; padding:20px; border-radius:10px; max-width:500px; margin:100px auto; margin-top:10%; box-shadow:0 0 20px rgba(0,0,0,0.2);">
+      <h4 style="margin-bottom: 10px;">💬 Comentarios por pedido</h4>
+
+      <label for="comentarioTexto" style="font-weight:600;">🧾 Comentarios anteriores:</label>
+      <textarea id="comentarioTexto" readonly rows="6" style="width:100%; padding:10px; border-radius:5px; margin-bottom: 15px; background:#f8f9fa; border:1px solid #ccc;"></textarea>
+
+      <label for="nuevoComentario" style="font-weight:600;">✍️ Tu comentario:</label>
+      <textarea id="nuevoComentario" rows="4" placeholder="Escribe o edita tu comentario..." style="width:100%; padding:10px; border-radius:5px; margin-top:5px;"></textarea>
+
+      <div style="margin-top:15px; text-align:right;">
+        <button id="guardarComentario">💾 Guardar</button>
+        <button id="eliminarComentario" style="background-color:#dc3545;">🗑 Eliminar</button>
+        <button onclick="document.getElementById('comentarioModal').style.display='none'">❌ Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
   <script type="module" src="./js/index.js"></script>
