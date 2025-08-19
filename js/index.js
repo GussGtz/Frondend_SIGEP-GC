@@ -17,38 +17,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   let pageSize = 10;
   let currentPage = 1;
 
-  // ===== Elementos =====
-  const els = {
-    filtroCompletado: document.getElementById('filtroCompletado'),
-    // modal filtros
-    btnOpenFilters: document.getElementById('btnOpenFilters'),
-    segPills: () => document.querySelectorAll('#filtersModal .seg-pill'),
-    fCreacionDesde: document.getElementById('fCreacionDesde'),
-    fCreacionHasta: document.getElementById('fCreacionHasta'),
-    wrapCreacionHasta: document.getElementById('wrapCreacionHasta'),
-    fEntregaDesde: document.getElementById('fEntregaDesde'),
-    fEntregaHasta: document.getElementById('fEntregaHasta'),
-    wrapEntregaHasta: document.getElementById('wrapEntregaHasta'),
-    fNumero: document.getElementById('fNumero'),
-    fDepartamento: document.getElementById('fDepartamento'),
-    fEstatus: document.getElementById('fEstatus'),
-    btnLimpiarFiltros: document.getElementById('btnLimpiarFiltros'),
-    btnAplicarFiltros: document.getElementById('btnAplicarFiltros'),
-    // paginación
-    chkPaginar: document.getElementById('chkPaginar'),
-    pageSize: document.getElementById('pageSize'),
-    paginationBar: document.getElementById('paginationBar'),
-    btnPrev: document.getElementById('btnPrev'),
-    btnNext: document.getElementById('btnNext'),
-    pageInfo: document.getElementById('pageInfo'),
-    totalInfo: document.getElementById('totalInfo'),
-    // admin
-    btnEliminarCompletados: document.getElementById('btnEliminarCompletados'),
-    thEliminar: document.getElementById('thEliminar'),
-    cuerpoTabla: document.getElementById('cuerpoTabla'),
-  };
-
-  // ===== Persistencia (localStorage) =====
+  // Persistencia (localStorage)
   const SKEY = 'sigepgc.ui';
   const saveState = () => {
     const state = {
@@ -70,7 +39,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     localStorage.setItem(SKEY, JSON.stringify(state));
   };
   const loadState = () => {
-    try { return JSON.parse(localStorage.getItem(SKEY) || 'null'); } catch { return null; }
+    try {
+      const raw = localStorage.getItem(SKEY);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch { return null; }
   };
 
   // ===== Helpers =====
@@ -81,6 +54,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (esAdmin) {
     document.getElementById('adminPanel').style.display = 'block';
 
+    // Crear pedido
     document.getElementById('formNuevoPedido').addEventListener('submit', async (e) => {
       e.preventDefault();
       const numero_pedido = document.getElementById('numero_pedido').value.trim();
@@ -109,7 +83,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
 
-    els.btnEliminarCompletados.addEventListener('click', async () => {
+    // Eliminar completados (masivo)
+    document.getElementById('btnEliminarCompletados').addEventListener('click', async () => {
       const confirmacion = await Swal.fire({
         title: '¿Eliminar pedidos completados?',
         text: 'Esta acción no se puede deshacer.',
@@ -129,11 +104,40 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (res.ok) await cargarPedidos('true');
       }
     });
-
-    if (els.thEliminar) els.thEliminar.style.display = '';
   } else {
-    if (els.thEliminar) els.thEliminar.style.display = 'none';
+    // Oculta columna eliminar si NO es admin
+    const thEliminar = document.getElementById('thEliminar');
+    if (thEliminar) thEliminar.style.display = 'none';
   }
+
+  // ===== Elementos =====
+  const els = {
+    filtroCompletado: document.getElementById('filtroCompletado'),
+    // modal filtros
+    btnOpenFilters: document.getElementById('btnOpenFilters'),
+    segPills: () => document.querySelectorAll('#filtersModal .seg-pill'),
+    fCreacionDesde: document.getElementById('fCreacionDesde'),
+    fCreacionHasta: document.getElementById('fCreacionHasta'),
+    wrapCreacionHasta: document.getElementById('wrapCreacionHasta'),
+    fEntregaDesde: document.getElementById('fEntregaDesde'),
+    fEntregaHasta: document.getElementById('fEntregaHasta'),
+    wrapEntregaHasta: document.getElementById('wrapEntregaHasta'),
+    fNumero: document.getElementById('fNumero'),
+    fDepartamento: document.getElementById('fDepartamento'),
+    fEstatus: document.getElementById('fEstatus'),
+    btnLimpiarFiltros: document.getElementById('btnLimpiarFiltros'),
+    btnAplicarFiltros: document.getElementById('btnAplicarFiltros'),
+    // paginación
+    chkPaginar: document.getElementById('chkPaginar'),
+    pageSize: document.getElementById('pageSize'),
+    paginationBar: document.getElementById('paginationBar'),
+    btnPrev: document.getElementById('btnPrev'),
+    btnNext: document.getElementById('btnNext'),
+    pageInfo: document.getElementById('pageInfo'),
+    totalInfo: document.getElementById('totalInfo'),
+    // admin
+    btnEliminarCompletados: document.getElementById('btnEliminarCompletados'),
+  };
 
   // ===== Fecha modes =====
   const dateMode = { creacion: 'specific', entrega: 'specific' };
@@ -187,16 +191,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // Pills handlers
-  els.segPills().forEach(pill => {
-    pill.addEventListener('click', () => {
-      const group = pill.dataset.group;
-      const mode = pill.dataset.mode;
-      document.querySelectorAll(`#filtersModal .seg-pill[data-group="${group}"]`).forEach(x => x.classList.remove('active'));
-      pill.classList.add('active');
-      dateMode[group] = mode;
-      updateDateInputsVisibility();
+  const attachPillHandlers = () => {
+    els.segPills().forEach(pill => {
+      pill.addEventListener('click', () => {
+        const group = pill.dataset.group;
+        const mode = pill.dataset.mode;
+        document.querySelectorAll(`#filtersModal .seg-pill[data-group="${group}"]`).forEach(x => x.classList.remove('active'));
+        pill.classList.add('active');
+        dateMode[group] = mode;
+        updateDateInputsVisibility();
+      });
     });
-  });
+  };
+  attachPillHandlers();
 
   // Leer filtros
   const getFilters = () => ({
@@ -210,7 +217,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     estatus: els.fEstatus.value,
   });
 
-  // Limpiar filtros
+  // Limpiar
   const clearFilters = () => {
     els.fCreacionDesde.value = '';
     els.fCreacionHasta.value = '';
@@ -233,11 +240,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     render();
   };
 
+  // Aplicar filtros
   els.btnAplicarFiltros.addEventListener('click', () => {
     currentPage = 1;
     saveState();
     render();
   });
+
   els.btnLimpiarFiltros.addEventListener('click', clearFilters);
 
   // ===== Filtrado =====
@@ -304,11 +313,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     return out;
   };
 
-  // ===== Paginación UI (UNA sola definición) =====
+  // ===== Paginación UI (única definición) =====
   const applyPaginationUI = () => {
-    const chk = els.chkPaginar;
-    const sel = els.pageSize;
-    const bar = els.paginationBar;
+    const chk = document.getElementById('chkPaginar');
+    const sel = document.getElementById('pageSize');
+    const bar = document.getElementById('paginationBar');
     chk.checked = paginationEnabled;
     sel.style.display = paginationEnabled ? 'inline-block' : 'none';
     bar.style.display = paginationEnabled ? 'flex' : 'none';
@@ -316,14 +325,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ===== Render =====
   function render() {
-    els.cuerpoTabla.innerHTML = '';
+    const cuerpoTabla = document.getElementById('cuerpoTabla');
+    cuerpoTabla.innerHTML = '';
 
+    // Mostrar/ocultar bulk delete
     els.btnEliminarCompletados.style.display = esAdmin ? 'inline-block' : 'none';
 
     let working = filterPedidos(rawPedidos);
 
+    // Contador total (siempre)
     els.totalInfo.textContent = `${working.length} registros`;
 
+    // Paginación
     if (paginationEnabled) {
       const total = working.length;
       const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -342,6 +355,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       els.paginationBar.style.display = 'none';
     }
 
+    // Filas
     working.forEach(p => {
       const fila = document.createElement('tr');
       const ventas = p.estatus?.ventas?.estado || 'Sin estatus';
@@ -395,13 +409,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       `;
 
       if (!esAdmin) {
-        const cellDel = fila.querySelector('.cell-eliminar');
-        if (cellDel) cellDel.style.display = 'none';
+        const thEliminar = document.getElementById('thEliminar');
+        if (thEliminar) thEliminar.style.display = 'none';
+        fila.querySelector('.cell-eliminar').style.display = 'none';
       }
 
-      els.cuerpoTabla.appendChild(fila);
+      document.getElementById('cuerpoTabla').appendChild(fila);
     });
 
+    // Tooltips
     $('[data-toggle="tooltip"]').tooltip({ container: 'body' });
   }
 
@@ -423,7 +439,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // ===== Delegación: tabla =====
-  const cuerpoTabla = els.cuerpoTabla;
+  const cuerpoTabla = document.getElementById('cuerpoTabla');
 
   // Cambiar estatus
   cuerpoTabla.addEventListener('change', async (e) => {
@@ -447,6 +463,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Comentarios + Eliminar
   cuerpoTabla.addEventListener('click', async (e) => {
+    // Comentarios
     const btnComentario = e.target.closest('.btnComentario');
     if (btnComentario) {
       comentarioPedidoId = btnComentario.dataset.id || null;
@@ -483,6 +500,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
+    // Eliminar (admin)
     const btnEliminar = e.target.closest('.btnEliminar');
     if (btnEliminar) {
       const pedidoId = btnEliminar.dataset.id;
@@ -512,7 +530,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Guardar / Eliminar comentario
+  // ===== Botones modal comentarios =====
   document.getElementById('guardarComentario').addEventListener('click', async () => {
     if (!comentarioPedidoId || !comentarioArea) {
       Swal.fire('Error', 'Abre el comentario desde el botón 📝 primero.', 'error');
@@ -554,33 +572,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Filtro rápido
+  // ===== Filtro rápido =====
   els.filtroCompletado.addEventListener('change', async (e) => {
     saveState();
     await cargarPedidos(e.target.value);
   });
 
-  // Paginación (ÚNICA función applyPaginationUI)
-  const applyPaginationUI = () => {
-    const chk = els.chkPaginar;
-    const sel = els.pageSize;
-    const bar = els.paginationBar;
-    chk.checked = paginationEnabled;
-    sel.style.display = paginationEnabled ? 'inline-block' : 'none';
-    bar.style.display = paginationEnabled ? 'flex' : 'none';
-  };
+  // ===== Paginación =====
   applyPaginationUI();
 
-  els.chkPaginar.addEventListener('change', () => {
-    paginationEnabled = els.chkPaginar.checked;
+  document.getElementById('chkPaginar').addEventListener('change', () => {
+    paginationEnabled = document.getElementById('chkPaginar').checked;
     currentPage = 1;
     saveState();
     applyPaginationUI();
     render();
   });
 
-  els.pageSize.addEventListener('change', () => {
-    pageSize = parseInt(els.pageSize.value, 10) || 10;
+  document.getElementById('pageSize').addEventListener('change', () => {
+    pageSize = parseInt(document.getElementById('pageSize').value, 10) || 10;
     currentPage = 1;
     saveState();
     render();
@@ -594,7 +604,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     currentPage++; saveState(); render();
   });
 
-  // PDF
+  // ===== PDF =====
   document.getElementById('btnExportarPDF').addEventListener('click', () => {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -630,17 +640,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     doc.save(`Listado_Pedidos_GlassCaribe_${fecha.toLocaleDateString('es-MX')}.pdf`);
   });
 
-  // Logout
+  // ===== Logout =====
   document.getElementById('logoutBtn').addEventListener('click', logoutAndRedirect);
 
-  // Restaurar estado
+  // ===== Restaurar estado guardado =====
   (function restore() {
     const st = loadState();
     if (!st) return;
     if (st.filtroCompletado) els.filtroCompletado.value = st.filtroCompletado;
     paginationEnabled = !!st.paginationEnabled;
     pageSize = parseInt(st.pageSize || 10, 10);
-    els.pageSize.value = String(pageSize);
+    document.getElementById('pageSize').value = String(pageSize);
     applyPaginationUI();
     const f = st.filters || {};
     dateMode.creacion = f.creacionMode || 'specific';
@@ -655,6 +665,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateDateInputsVisibility();
   })();
 
-  // Primera carga
+  // ===== Primera carga =====
   await cargarPedidos(els.filtroCompletado.value || 'todos');
 });
