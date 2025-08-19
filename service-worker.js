@@ -1,96 +1,68 @@
-/* service-worker.js */
-const CACHE_PREFIX = 'sigepgc';
-const STATIC_CACHE = `${CACHE_PREFIX}-static-v1`;
-const RUNTIME_CACHE = `${CACHE_PREFIX}-runtime-v1`;
+// service-worker.js
+const SW_VERSION = 'v2025-08-19-5';
+const STATIC_CACHE = `static-${SW_VERSION}`;
 
+// Cacheamos SOLO estáticos “seguros” (no HTML/JS principales)
 const STATIC_ASSETS = [
-  '/offline.html',
   '/manifest.json',
+  '/offline.html',
   '/assets/fondo.png',
   '/assets/logoglass.png',
   '/assets/logoglassico.ico',
-  '/js/index.js',
-  '/js/auth.js',
-  '/js/login.js'
+  '/assets/icons/icon-192.png',
+  '/assets/icons/icon-512.png'
 ];
 
-const isSameOrigin = (url) => url.origin === self.location.origin;
-const isApi = (url) => url.pathname.startsWith('/api') || url.origin.includes('backend-sigep-gc');
-const isLogin = (url) => url.pathname.endsWith('/login.html');
-const isHTMLRequest = (request) =>
-  request.mode === 'navigate' ||
-  request.destination === 'document' ||
-  (request.headers.get('accept') || '').includes('text/html');
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(STATIC_CACHE).then((cache) => cache.addAll(STATIC_ASSETS)).then(() => self.skipWaiting())
+  );
+});
 
+self.addEventListener('activate', (event) => {
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.map((k) => (k !== STATIC_CACHE ? caches.delete(k) : null)));
+    await self.clients.claim();
+  })());
+});
+
+// Mensaje para activar al instante tras deploy
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(STATIC_CACHE).then((c) => c.addAll(STATIC_ASSETS)));
-  self.skipWaiting();
-});
-
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((k) => k.startsWith(CACHE_PREFIX) && ![STATIC_CACHE, RUNTIME_CACHE].includes(k))
-          .map((k) => caches.delete(k))
-      )
-    )
-  );
-  self.clients.claim();
-});
-
 self.addEventListener('fetch', (event) => {
-  const { request } = event;
-  if (request.method !== 'GET') return;
+  const req = event.request;
+  const url = new URL(req.url);
 
-  const url = new URL(request.url);
+  // No interceptar llamadas a API ni de otros orígenes
+  const isAPI = url.pathname.startsWith('/api') || url.origin.includes('backend-sigep-gc');
+  if (isAPI) return;
 
-  // Nunca cachear API ni login
-  if (isApi(url) || isLogin(url)) return;
-
-  // HTML -> Network First
-  if (isHTMLRequest(request)) {
-    event.respondWith((async () => {
-      try {
-        const fresh = await fetch(new Request(request, { cache: 'reload' }));
-        const cache = await caches.open(RUNTIME_CACHE);
-        cache.put(request, fresh.clone());
-        return fresh;
-      } catch {
-        const cache = await caches.open(RUNTIME_CACHE);
-        const cached = await cache.match(request);
-        if (cached) return cached;
-        return (await caches.open(STATIC_CACHE)).match('/offline.html');
-      }
-    })());
+  // Navegación: network-first, fallback offline
+  if (req.mode === 'navigate') {
+    event.respondWith(
+      fetch(req).catch(() => caches.match('/offline.html'))
+    );
     return;
   }
 
-  // Estáticos mismo origen -> Stale-While-Revalidate
-  if (isSameOrigin(url)) {
-    event.respondWith((async () => {
-      const cache = await caches.open(RUNTIME_CACHE);
-      const cached = await cache.match(request);
-      const networkPromise = fetch(request).then((res) => {
-        cache.put(request, res.clone());
-        return res;
-      }).catch(() => null);
-      return cached || (await networkPromise) || (await caches.match('/offline.html'));
-    })());
-    return;
-  }
-
-  // Terceros
-  event.respondWith((async () => {
-    try { return await fetch(request); }
-    catch {
-      const cached = await caches.match(request);
-      return cached || (await caches.match('/offline.html'));
+  // Misma-origen: cache-first SOLO para STATIC_ASSETS
+  if (url.origin === self.location.origin) {
+    const matchInStaticList = STATIC_ASSETS.includes(url.pathname);
+    if (matchInStaticList) {
+      event.respondWith(
+        caches.match(req).then((cached) => {
+          if (cached) return cached;
+          return fetch(req).then((res) => {
+            const copy = res.clone();
+            caches.open(STATIC_CACHE).then((cache) => cache.put(req, copy));
+            return res;
+          }).catch(() => caches.match('/offline.html'));
+        })
+      );
     }
-  })());
+    // el resto (index.html, js, etc.) van por red normalmente -> evita quedarse “pegado”
+  }
 });
