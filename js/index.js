@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
 
-    // Eliminar completados
+    // Eliminar completados (masivo)
     document.getElementById('btnEliminarCompletados').addEventListener('click', async () => {
       const confirmacion = await Swal.fire({
         title: '¿Eliminar pedidos completados?',
@@ -185,7 +185,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Abrir modal filtros
-  document.getElementById('btnOpenFilters').addEventListener('click', () => {
+  els.btnOpenFilters.addEventListener('click', () => {
     $('#filtersModal').modal('show');
     updateDateInputsVisibility();
   });
@@ -391,7 +391,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <td class="col-ripple">
           ${hayComentarios ? `
             <a href="javascript:void(0)" class="intro-banner-vdo-play-btn pinkBg" title="Tiene comentarios">
-              <i class="glyphicon glyphicon-play whiteText"></i>
+              <i class="bi bi-bell-fill"></i>
               <span class="ripple pinkBg"></span>
               <span class="ripple pinkBg"></span>
               <span class="ripple pinkBg"></span>
@@ -410,7 +410,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       cuerpoTabla.appendChild(fila);
     });
 
-    // Tooltips para iconos
+    // Tooltips
     $('[data-toggle="tooltip"]').tooltip({ container: 'body' });
   }
 
@@ -672,4 +672,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ===== Primera carga =====
   await cargarPedidos(els.filtroCompletado.value || 'todos');
+
+  // ===== Paginación UI init =====
+  function applyPaginationUI(){
+    document.getElementById('chkPaginar').checked = paginationEnabled;
+    document.getElementById('pageSize').style.display = paginationEnabled ? 'inline-block' : 'none';
+  }
 });
