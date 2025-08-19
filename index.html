@@ -21,14 +21,14 @@
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#0d6efd">
 
-  <!-- iOS / iPadOS -->
+  <!-- PWA / iOS -->
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="SIGEP-GC">
   <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
 
   <style>
-    /* Ripple bell */
     .pinkBg{background-color:#ed184f!important;background-image:linear-gradient(90deg,#fd5581,#fd8b55)}
     .intro-banner-vdo-play-btn{height:40px;width:40px;position:relative;display:inline-block;text-align:center;border-radius:100px;z-index:1}
     .intro-banner-vdo-play-btn i{line-height:40px;font-size:20px;color:white}
@@ -51,15 +51,10 @@
     button{padding:10px 18px;background:linear-gradient(to right,#0d6efd,#20c997);color:#fff;border:none;border-radius:.6rem;font-weight:bold;font-size:.95rem;cursor:pointer;transition:all .2s}
     button:hover{transform:scale(1.05);box-shadow:0 6px 18px rgba(0,123,255,.25)}
 
-    /* Botón filtros: gris fuerte */
     .btn-filters{background:#fff;border:1px solid #ced4da;color:#495057}
     .btn-filters:hover{background:#f8f9fa;color:#343a40}
 
-    /* Reset botón cerrar (modales) */
-    .modal .close{
-      background:transparent!important;border:0!important;box-shadow:none!important;
-      color:#6c757d!important;padding:.5rem 1rem!important;border-radius:.25rem!important;
-    }
+    .modal .close{background:transparent!important;border:0!important;box-shadow:none!important;color:#6c757d!important;padding:.5rem 1rem!important;border-radius:.25rem!important}
     .modal .close:hover{color:#343a40!important;background:transparent!important}
 
     .tabla-responsive{overflow-x:auto;border-radius:.9rem}
@@ -72,12 +67,10 @@
     .pagination-bar{display:flex;gap:10px;align-items:center;justify-content:flex-end;margin:8px 0 14px}
     .pagination-bar .page-btn{background:#f1f3f5;color:#333}
 
-    /* icon-only buttons */
     .btn-icon{background:transparent;border:none;padding:6px;line-height:1;border-radius:6px;cursor:pointer}
     .btn-icon:hover{background:rgba(0,0,0,.05)}
     .btn-icon i{font-size:1.05rem;color:#0d6efd}
 
-    /* Pills (modal filtros) */
     .seg-pill{border:1px solid #CFD8DC;color:#6c757d;cursor:pointer;padding:.35rem .6rem;border-radius:.5rem}
     .seg-pill.active{background:#304FFE;color:#fff;border-color:#304FFE}
 
@@ -109,7 +102,6 @@
 
     <h3>Pedidos registrados</h3>
 
-    <!-- Barra superior -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
       <div class="mb-2">
         <label for="filtroCompletado" class="font-weight-bold mb-0 mr-2">Filtrar pedidos:</label>
@@ -143,14 +135,12 @@
       </div>
     </div>
 
-    <!-- Paginación -->
     <div class="pagination-bar" id="paginationBar" style="display:none;">
       <button class="page-btn btn btn-light btn-sm" id="btnPrev">« Anterior</button>
       <span class="page-info mx-2" id="pageInfo">Página 1 de 1</span>
       <button class="page-btn btn btn-light btn-sm" id="btnNext">Siguiente »</button>
     </div>
 
-    <!-- Tabla -->
     <div class="tabla-responsive">
       <table id="tablaPedidos">
         <thead>
@@ -172,7 +162,6 @@
       </table>
     </div>
 
-    <!-- Cards móvil -->
     <div id="cuerpoCards"></div>
   </div>
 
@@ -199,12 +188,8 @@
               <div class="seg-pill mr-2 mb-2" data-mode="between" data-group="creacion">Entre</div>
             </div>
             <div class="form-row">
-              <div class="col-md-6 mb-2">
-                <input type="date" id="fCreacionDesde" />
-              </div>
-              <div class="col-md-6 mb-2" id="wrapCreacionHasta">
-                <input type="date" id="fCreacionHasta" />
-              </div>
+              <div class="col-md-6 mb-2"><input type="date" id="fCreacionDesde" /></div>
+              <div class="col-md-6 mb-2" id="wrapCreacionHasta"><input type="date" id="fCreacionHasta" /></div>
             </div>
           </div>
 
@@ -219,12 +204,8 @@
               <div class="seg-pill mr-2 mb-2" data-mode="between" data-group="entrega">Entre</div>
             </div>
             <div class="form-row">
-              <div class="col-md-6 mb-2">
-                <input type="date" id="fEntregaDesde" />
-              </div>
-              <div class="col-md-6 mb-2" id="wrapEntregaHasta">
-                <input type="date" id="fEntregaHasta" />
-              </div>
+              <div class="col-md-6 mb-2"><input type="date" id="fEntregaDesde" /></div>
+              <div class="col-md-6 mb-2" id="wrapEntregaHasta"><input type="date" id="fEntregaHasta" /></div>
             </div>
           </div>
 
@@ -280,7 +261,6 @@
         <div class="modal-body">
           <label class="font-weight-bold">Comentarios anteriores</label>
           <textarea id="comentarioTexto" readonly rows="6" class="form-control mb-3" style="background:#f8f9fa;"></textarea>
-
           <label class="font-weight-bold">Tu comentario</label>
           <textarea id="nuevoComentario" rows="4" class="form-control" placeholder="Escribe o edita tu comentario..."></textarea>
         </div>
@@ -292,18 +272,18 @@
     </div>
   </div>
 
-  <!-- PDF -->
+  <!-- PDF libs -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
   <!-- App -->
-  <script type="module" src="/js/index.js?v=v2025-08-19-3"></script>
+  <script type="module" src="/js/index.js?v=v2025-08-19-4"></script>
 
-  <!-- Registro SW con versión para forzar update tras deploy -->
+  <!-- Service Worker con versión -->
   <script>
     (function() {
       if (!('serviceWorker' in navigator)) return;
-      const SW_VERSION_TAG = 'v2025-08-19-3';
+      const SW_VERSION_TAG = 'v2025-08-19-4';
       const swUrl = `/service-worker.js?v=${encodeURIComponent(SW_VERSION_TAG)}`;
       window.addEventListener('load', async () => {
         try {
@@ -312,9 +292,7 @@
           if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
           let refreshing = false;
           navigator.serviceWorker.addEventListener('controllerchange', () => {
-            if (refreshing) return;
-            refreshing = true;
-            window.location.reload();
+            if (refreshing) return; refreshing = true; window.location.reload();
           });
           setInterval(() => reg.update(), 30 * 60 * 1000);
         } catch (e) { console.error('SW registro falló:', e); }

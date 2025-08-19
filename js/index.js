@@ -81,7 +81,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (esAdmin) {
     document.getElementById('adminPanel').style.display = 'block';
 
-    // Crear pedido
     document.getElementById('formNuevoPedido').addEventListener('submit', async (e) => {
       e.preventDefault();
       const numero_pedido = document.getElementById('numero_pedido').value.trim();
@@ -110,7 +109,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
 
-    // Eliminar completados (masivo)
     els.btnEliminarCompletados.addEventListener('click', async () => {
       const confirmacion = await Swal.fire({
         title: '¿Eliminar pedidos completados?',
@@ -132,10 +130,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
 
-    // Mostrar header "Eliminar"
     if (els.thEliminar) els.thEliminar.style.display = '';
   } else {
-    // Oculta columna "Eliminar" si NO es admin
     if (els.thEliminar) els.thEliminar.style.display = 'none';
   }
 
@@ -191,19 +187,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // Pills handlers
-  const attachPillHandlers = () => {
-    els.segPills().forEach(pill => {
-      pill.addEventListener('click', () => {
-        const group = pill.dataset.group;
-        const mode = pill.dataset.mode;
-        document.querySelectorAll(`#filtersModal .seg-pill[data-group="${group}"]`).forEach(x => x.classList.remove('active'));
-        pill.classList.add('active');
-        dateMode[group] = mode;
-        updateDateInputsVisibility();
-      });
+  els.segPills().forEach(pill => {
+    pill.addEventListener('click', () => {
+      const group = pill.dataset.group;
+      const mode = pill.dataset.mode;
+      document.querySelectorAll(`#filtersModal .seg-pill[data-group="${group}"]`).forEach(x => x.classList.remove('active'));
+      pill.classList.add('active');
+      dateMode[group] = mode;
+      updateDateInputsVisibility();
     });
-  };
-  attachPillHandlers();
+  });
 
   // Leer filtros
   const getFilters = () => ({
@@ -217,7 +210,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     estatus: els.fEstatus.value,
   });
 
-  // Limpiar
+  // Limpiar filtros
   const clearFilters = () => {
     els.fCreacionDesde.value = '';
     els.fCreacionHasta.value = '';
@@ -308,15 +301,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       out = out.filter(p => pedidoTieneEstatus(p, f.departamento, f.estatus));
     }
 
-    // filtro rápido completado (del select superior) lo hace el backend, pero por si acaso:
-    if (f.completado === 'true') {
-      // (ya lo filtra el backend devolviendo solo completados si le pasaste el query param)
-    }
-
     return out;
   };
 
-  // ===== Paginación UI =====
+  // ===== Paginación UI (UNA sola definición) =====
   const applyPaginationUI = () => {
     const chk = els.chkPaginar;
     const sel = els.pageSize;
@@ -330,15 +318,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   function render() {
     els.cuerpoTabla.innerHTML = '';
 
-    // Mostrar/ocultar bulk delete
     els.btnEliminarCompletados.style.display = esAdmin ? 'inline-block' : 'none';
 
     let working = filterPedidos(rawPedidos);
 
-    // Contador total (siempre)
     els.totalInfo.textContent = `${working.length} registros`;
 
-    // Paginación
     if (paginationEnabled) {
       const total = working.length;
       const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -357,7 +342,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       els.paginationBar.style.display = 'none';
     }
 
-    // Filas
     working.forEach(p => {
       const fila = document.createElement('tr');
       const ventas = p.estatus?.ventas?.estado || 'Sin estatus';
@@ -418,7 +402,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       els.cuerpoTabla.appendChild(fila);
     });
 
-    // Tooltips
     $('[data-toggle="tooltip"]').tooltip({ container: 'body' });
   }
 
@@ -464,7 +447,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Comentarios + Eliminar
   cuerpoTabla.addEventListener('click', async (e) => {
-    // Comentarios
     const btnComentario = e.target.closest('.btnComentario');
     if (btnComentario) {
       comentarioPedidoId = btnComentario.dataset.id || null;
@@ -501,7 +483,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    // Eliminar (admin)
     const btnEliminar = e.target.closest('.btnEliminar');
     if (btnEliminar) {
       const pedidoId = btnEliminar.dataset.id;
@@ -531,7 +512,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // ===== Botones modal comentarios =====
+  // Guardar / Eliminar comentario
   document.getElementById('guardarComentario').addEventListener('click', async () => {
     if (!comentarioPedidoId || !comentarioArea) {
       Swal.fire('Error', 'Abre el comentario desde el botón 📝 primero.', 'error');
@@ -573,13 +554,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // ===== Filtro rápido =====
+  // Filtro rápido
   els.filtroCompletado.addEventListener('change', async (e) => {
     saveState();
     await cargarPedidos(e.target.value);
   });
 
-  // ===== Paginación =====
+  // Paginación (ÚNICA función applyPaginationUI)
   const applyPaginationUI = () => {
     const chk = els.chkPaginar;
     const sel = els.pageSize;
@@ -613,7 +594,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     currentPage++; saveState(); render();
   });
 
-  // ===== PDF =====
+  // PDF
   document.getElementById('btnExportarPDF').addEventListener('click', () => {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -649,10 +630,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     doc.save(`Listado_Pedidos_GlassCaribe_${fecha.toLocaleDateString('es-MX')}.pdf`);
   });
 
-  // ===== Logout =====
+  // Logout
   document.getElementById('logoutBtn').addEventListener('click', logoutAndRedirect);
 
-  // ===== Restaurar estado guardado =====
+  // Restaurar estado
   (function restore() {
     const st = loadState();
     if (!st) return;
@@ -674,6 +655,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateDateInputsVisibility();
   })();
 
-  // ===== Primera carga =====
+  // Primera carga
   await cargarPedidos(els.filtroCompletado.value || 'todos');
 });
