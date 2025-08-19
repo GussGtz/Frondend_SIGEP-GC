@@ -17,7 +17,38 @@ document.addEventListener('DOMContentLoaded', async () => {
   let pageSize = 10;
   let currentPage = 1;
 
-  // Persistencia (localStorage)
+  // ===== Elementos =====
+  const els = {
+    filtroCompletado: document.getElementById('filtroCompletado'),
+    // modal filtros
+    btnOpenFilters: document.getElementById('btnOpenFilters'),
+    segPills: () => document.querySelectorAll('#filtersModal .seg-pill'),
+    fCreacionDesde: document.getElementById('fCreacionDesde'),
+    fCreacionHasta: document.getElementById('fCreacionHasta'),
+    wrapCreacionHasta: document.getElementById('wrapCreacionHasta'),
+    fEntregaDesde: document.getElementById('fEntregaDesde'),
+    fEntregaHasta: document.getElementById('fEntregaHasta'),
+    wrapEntregaHasta: document.getElementById('wrapEntregaHasta'),
+    fNumero: document.getElementById('fNumero'),
+    fDepartamento: document.getElementById('fDepartamento'),
+    fEstatus: document.getElementById('fEstatus'),
+    btnLimpiarFiltros: document.getElementById('btnLimpiarFiltros'),
+    btnAplicarFiltros: document.getElementById('btnAplicarFiltros'),
+    // paginación
+    chkPaginar: document.getElementById('chkPaginar'),
+    pageSize: document.getElementById('pageSize'),
+    paginationBar: document.getElementById('paginationBar'),
+    btnPrev: document.getElementById('btnPrev'),
+    btnNext: document.getElementById('btnNext'),
+    pageInfo: document.getElementById('pageInfo'),
+    totalInfo: document.getElementById('totalInfo'),
+    // admin
+    btnEliminarCompletados: document.getElementById('btnEliminarCompletados'),
+    thEliminar: document.getElementById('thEliminar'),
+    cuerpoTabla: document.getElementById('cuerpoTabla'),
+  };
+
+  // ===== Persistencia (localStorage) =====
   const SKEY = 'sigepgc.ui';
   const saveState = () => {
     const state = {
@@ -39,11 +70,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     localStorage.setItem(SKEY, JSON.stringify(state));
   };
   const loadState = () => {
-    try {
-      const raw = localStorage.getItem(SKEY);
-      if (!raw) return null;
-      return JSON.parse(raw);
-    } catch { return null; }
+    try { return JSON.parse(localStorage.getItem(SKEY) || 'null'); } catch { return null; }
   };
 
   // ===== Helpers =====
@@ -84,7 +111,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // Eliminar completados (masivo)
-    document.getElementById('btnEliminarCompletados').addEventListener('click', async () => {
+    els.btnEliminarCompletados.addEventListener('click', async () => {
       const confirmacion = await Swal.fire({
         title: '¿Eliminar pedidos completados?',
         text: 'Esta acción no se puede deshacer.',
@@ -104,40 +131,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (res.ok) await cargarPedidos('true');
       }
     });
-  } else {
-    // Oculta columna eliminar si NO es admin
-    const thEliminar = document.getElementById('thEliminar');
-    if (thEliminar) thEliminar.style.display = 'none';
-  }
 
-  // ===== Elementos =====
-  const els = {
-    filtroCompletado: document.getElementById('filtroCompletado'),
-    // modal filtros
-    btnOpenFilters: document.getElementById('btnOpenFilters'),
-    segPills: () => document.querySelectorAll('#filtersModal .seg-pill'),
-    fCreacionDesde: document.getElementById('fCreacionDesde'),
-    fCreacionHasta: document.getElementById('fCreacionHasta'),
-    wrapCreacionHasta: document.getElementById('wrapCreacionHasta'),
-    fEntregaDesde: document.getElementById('fEntregaDesde'),
-    fEntregaHasta: document.getElementById('fEntregaHasta'),
-    wrapEntregaHasta: document.getElementById('wrapEntregaHasta'),
-    fNumero: document.getElementById('fNumero'),
-    fDepartamento: document.getElementById('fDepartamento'),
-    fEstatus: document.getElementById('fEstatus'),
-    btnLimpiarFiltros: document.getElementById('btnLimpiarFiltros'),
-    btnAplicarFiltros: document.getElementById('btnAplicarFiltros'),
-    // paginación
-    chkPaginar: document.getElementById('chkPaginar'),
-    pageSize: document.getElementById('pageSize'),
-    paginationBar: document.getElementById('paginationBar'),
-    btnPrev: document.getElementById('btnPrev'),
-    btnNext: document.getElementById('btnNext'),
-    pageInfo: document.getElementById('pageInfo'),
-    totalInfo: document.getElementById('totalInfo'),
-    // admin
-    btnEliminarCompletados: document.getElementById('btnEliminarCompletados'),
-  };
+    // Mostrar header "Eliminar"
+    if (els.thEliminar) els.thEliminar.style.display = '';
+  } else {
+    // Oculta columna "Eliminar" si NO es admin
+    if (els.thEliminar) els.thEliminar.style.display = 'none';
+  }
 
   // ===== Fecha modes =====
   const dateMode = { creacion: 'specific', entrega: 'specific' };
@@ -240,13 +240,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     render();
   };
 
-  // Aplicar filtros
   els.btnAplicarFiltros.addEventListener('click', () => {
     currentPage = 1;
     saveState();
     render();
   });
-
   els.btnLimpiarFiltros.addEventListener('click', clearFilters);
 
   // ===== Filtrado =====
@@ -310,14 +308,19 @@ document.addEventListener('DOMContentLoaded', async () => {
       out = out.filter(p => pedidoTieneEstatus(p, f.departamento, f.estatus));
     }
 
+    // filtro rápido completado (del select superior) lo hace el backend, pero por si acaso:
+    if (f.completado === 'true') {
+      // (ya lo filtra el backend devolviendo solo completados si le pasaste el query param)
+    }
+
     return out;
   };
 
-  // ===== Paginación UI (única definición) =====
+  // ===== Paginación UI =====
   const applyPaginationUI = () => {
-    const chk = document.getElementById('chkPaginar');
-    const sel = document.getElementById('pageSize');
-    const bar = document.getElementById('paginationBar');
+    const chk = els.chkPaginar;
+    const sel = els.pageSize;
+    const bar = els.paginationBar;
     chk.checked = paginationEnabled;
     sel.style.display = paginationEnabled ? 'inline-block' : 'none';
     bar.style.display = paginationEnabled ? 'flex' : 'none';
@@ -325,8 +328,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ===== Render =====
   function render() {
-    const cuerpoTabla = document.getElementById('cuerpoTabla');
-    cuerpoTabla.innerHTML = '';
+    els.cuerpoTabla.innerHTML = '';
 
     // Mostrar/ocultar bulk delete
     els.btnEliminarCompletados.style.display = esAdmin ? 'inline-block' : 'none';
@@ -385,7 +387,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <td>${fechaCreacionSolo}</td>
         <td>${p.fecha_entrega}</td>
         <td>${ventas}</td>
-        <td>${Entregas}</td>
+        <td>${contabilidad}</td>
         <td>${produccion}</td>
         <td>
           <select data-id="${p.id}" class="selectEstatus">
@@ -409,12 +411,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       `;
 
       if (!esAdmin) {
-        const thEliminar = document.getElementById('thEliminar');
-        if (thEliminar) thEliminar.style.display = 'none';
-        fila.querySelector('.cell-eliminar').style.display = 'none';
+        const cellDel = fila.querySelector('.cell-eliminar');
+        if (cellDel) cellDel.style.display = 'none';
       }
 
-      document.getElementById('cuerpoTabla').appendChild(fila);
+      els.cuerpoTabla.appendChild(fila);
     });
 
     // Tooltips
@@ -439,7 +440,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // ===== Delegación: tabla =====
-  const cuerpoTabla = document.getElementById('cuerpoTabla');
+  const cuerpoTabla = els.cuerpoTabla;
 
   // Cambiar estatus
   cuerpoTabla.addEventListener('change', async (e) => {
@@ -579,18 +580,26 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // ===== Paginación =====
+  const applyPaginationUI = () => {
+    const chk = els.chkPaginar;
+    const sel = els.pageSize;
+    const bar = els.paginationBar;
+    chk.checked = paginationEnabled;
+    sel.style.display = paginationEnabled ? 'inline-block' : 'none';
+    bar.style.display = paginationEnabled ? 'flex' : 'none';
+  };
   applyPaginationUI();
 
-  document.getElementById('chkPaginar').addEventListener('change', () => {
-    paginationEnabled = document.getElementById('chkPaginar').checked;
+  els.chkPaginar.addEventListener('change', () => {
+    paginationEnabled = els.chkPaginar.checked;
     currentPage = 1;
     saveState();
     applyPaginationUI();
     render();
   });
 
-  document.getElementById('pageSize').addEventListener('change', () => {
-    pageSize = parseInt(document.getElementById('pageSize').value, 10) || 10;
+  els.pageSize.addEventListener('change', () => {
+    pageSize = parseInt(els.pageSize.value, 10) || 10;
     currentPage = 1;
     saveState();
     render();
@@ -650,7 +659,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (st.filtroCompletado) els.filtroCompletado.value = st.filtroCompletado;
     paginationEnabled = !!st.paginationEnabled;
     pageSize = parseInt(st.pageSize || 10, 10);
-    document.getElementById('pageSize').value = String(pageSize);
+    els.pageSize.value = String(pageSize);
     applyPaginationUI();
     const f = st.filters || {};
     dateMode.creacion = f.creacionMode || 'specific';

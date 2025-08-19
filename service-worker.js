@@ -1,4 +1,4 @@
-/* service-worker.js — definitivo */
+/* service-worker.js */
 const CACHE_PREFIX = 'sigepgc';
 const STATIC_CACHE = `${CACHE_PREFIX}-static-v1`;
 const RUNTIME_CACHE = `${CACHE_PREFIX}-runtime-v1`;
@@ -14,7 +14,6 @@ const STATIC_ASSETS = [
   '/js/login.js'
 ];
 
-// Utilidades
 const isSameOrigin = (url) => url.origin === self.location.origin;
 const isApi = (url) => url.pathname.startsWith('/api') || url.origin.includes('backend-sigep-gc');
 const isLogin = (url) => url.pathname.endsWith('/login.html');
@@ -23,18 +22,15 @@ const isHTMLRequest = (request) =>
   request.destination === 'document' ||
   (request.headers.get('accept') || '').includes('text/html');
 
-// Mensajes desde la página (para activar de inmediato)
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
-// Instalar: precache mínimo (no index.html para no “encallarlo”)
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(STATIC_CACHE).then((c) => c.addAll(STATIC_ASSETS)));
   self.skipWaiting();
 });
 
-// Activar: limpia versiones viejas y toma control
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -48,7 +44,6 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch: estrategias por tipo
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET') return;
@@ -58,11 +53,10 @@ self.addEventListener('fetch', (event) => {
   // Nunca cachear API ni login
   if (isApi(url) || isLogin(url)) return;
 
-  // 1) HTML / navegación -> Network First con fallback a cache/offline
+  // HTML -> Network First
   if (isHTMLRequest(request)) {
     event.respondWith((async () => {
       try {
-        // 'cache: reload' pide al servidor el HTML más reciente
         const fresh = await fetch(new Request(request, { cache: 'reload' }));
         const cache = await caches.open(RUNTIME_CACHE);
         cache.put(request, fresh.clone());
@@ -77,7 +71,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 2) Estáticos del mismo origen -> Stale-While-Revalidate
+  // Estáticos mismo origen -> Stale-While-Revalidate
   if (isSameOrigin(url)) {
     event.respondWith((async () => {
       const cache = await caches.open(RUNTIME_CACHE);
@@ -86,17 +80,15 @@ self.addEventListener('fetch', (event) => {
         cache.put(request, res.clone());
         return res;
       }).catch(() => null);
-
       return cached || (await networkPromise) || (await caches.match('/offline.html'));
     })());
     return;
   }
 
-  // 3) Terceros -> red y fallback a cache/offline
+  // Terceros
   event.respondWith((async () => {
-    try {
-      return await fetch(request);
-    } catch {
+    try { return await fetch(request); }
+    catch {
       const cached = await caches.match(request);
       return cached || (await caches.match('/offline.html'));
     }

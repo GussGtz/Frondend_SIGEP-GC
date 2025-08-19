@@ -11,7 +11,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  <!-- jQuery + Bootstrap -->
+  <!-- jQuery + Bootstrap 4 -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" crossorigin="anonymous"></script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -24,7 +24,7 @@
   <!-- iOS / iPadOS -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <!-- Usa un icono 192x192 (o 180x180) para mejor resultado en iOS -->
+  <meta name="apple-mobile-web-app-title" content="SIGEP-GC">
   <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
 
   <style>
@@ -85,51 +85,10 @@
   </style>
 </head>
 
-<script>
-  (function() {
-    if (!('serviceWorker' in navigator)) return;
-
-    // ⬅️ Cambia este tag cuando hagas deploy (por fecha o build-id)
-    const SW_VERSION_TAG = 'v2025-08-19-2';
-
-    // fuerza a traer el SW nuevo tras cada despliegue
-    const swUrl = `/service-worker.js?v=${encodeURIComponent(SW_VERSION_TAG)}`;
-
-    window.addEventListener('load', async () => {
-      try {
-        const reg = await navigator.serviceWorker.register(swUrl, {
-          scope: '/',
-          updateViaCache: 'none'
-        });
-
-        // intenta actualizar en caliente
-        reg.update();
-
-        // si hay uno nuevo esperando, actívalo ya
-        if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-
-        // cuando cambie el controlador (nuevo SW activo), recarga 1 vez
-        let refreshing = false;
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-          if (refreshing) return;
-          refreshing = true;
-          window.location.reload();
-        });
-
-        // chequeo periódico de updates
-        setInterval(() => reg.update(), 30 * 60 * 1000);
-      } catch (e) {
-        console.error('SW registro falló:', e);
-      }
-    });
-  })();
-</script>
-
-
 <body>
   <div class="main-container">
     <div class="logo-container">
-      <img src="./assets/logoglass.png" alt="Logo">
+      <img src="/assets/logoglass.png" alt="Logo">
     </div>
 
     <h2>Gestión de Pedidos</h2>
@@ -201,7 +160,7 @@
             <th>Fecha de Creación</th>
             <th>Fecha de Entrega</th>
             <th>Ventas</th>
-            <th>Entregas</th>
+            <th>Contabilidad</th>
             <th>Producción</th>
             <th>Actualizar</th>
             <th>Comentarios</th>
@@ -222,7 +181,7 @@
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 id="filtersLabel" class="modal-title">Búsqueda y filtros avanzados</h5>
+          <h5 id="filtersLabel" class="modal-title" style="color:#495057;">Búsqueda y filtros avanzados</h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
             <span aria-hidden="true">&times;</span>
           </button>
@@ -280,7 +239,7 @@
               <select id="fDepartamento">
                 <option value="todos" selected>Todos</option>
                 <option value="ventas">Ventas</option>
-                <option value="contabilidad">Entregas</option>
+                <option value="contabilidad">Contabilidad</option>
                 <option value="produccion">Producción</option>
               </select>
             </div>
@@ -337,7 +296,30 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
-  <!-- App (SOLO UNA VEZ) -->
-  <script type="module" src="./js/index.js"></script>
+  <!-- App -->
+  <script type="module" src="/js/index.js?v=v2025-08-19-3"></script>
+
+  <!-- Registro SW con versión para forzar update tras deploy -->
+  <script>
+    (function() {
+      if (!('serviceWorker' in navigator)) return;
+      const SW_VERSION_TAG = 'v2025-08-19-3';
+      const swUrl = `/service-worker.js?v=${encodeURIComponent(SW_VERSION_TAG)}`;
+      window.addEventListener('load', async () => {
+        try {
+          const reg = await navigator.serviceWorker.register(swUrl, { scope: '/', updateViaCache: 'none' });
+          reg.update();
+          if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+          let refreshing = false;
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (refreshing) return;
+            refreshing = true;
+            window.location.reload();
+          });
+          setInterval(() => reg.update(), 30 * 60 * 1000);
+        } catch (e) { console.error('SW registro falló:', e); }
+      });
+    })();
+  </script>
 </body>
 </html>
