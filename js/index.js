@@ -1,25 +1,18 @@
-import { obtenerToken } from './auth.js';
+// index.js — dashboard protegido usando cookie
+import { requireAuth, logoutAndRedirect } from './auth.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-  const API_URL = 'https://backend-sigep-gc.onrender.com';
-  const token = obtenerToken();
-  if (!token) return window.location.href = 'login.html';
+  const API_URL = (window.__ENV__ && window.__ENV__.API_URL) || 'https://backend-sigep-gc1.onrender.com';
 
-  const headers = { Authorization: `Bearer ${token}` };
-
-  const resUser = await fetch(`${API_URL}/api/auth/me`, { headers });
-  if (!resUser.ok) {
-    localStorage.removeItem('token');
-    return window.location.href = 'login.html';
-  }
-
-  const userData = await resUser.json();
-  const userDepartamento = userData.departamento;
-  const esAdmin = userData.role_id === 1;
+  // 🔐 exige sesión y obtiene al usuario
+  const userData = await requireAuth();
+  const userDepartamento = userData?.departamento;
+  const esAdmin = userData?.role_id === 1;
 
   if (esAdmin) {
     document.getElementById('adminPanel').style.display = 'block';
 
+    // Crear pedido
     document.getElementById('formNuevoPedido').addEventListener('submit', async (e) => {
       e.preventDefault();
       const numero_pedido = document.getElementById('numero_pedido').value.trim();
@@ -29,7 +22,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const res = await fetch(`${API_URL}/api/pedidos`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ numero_pedido, fecha_entrega })
       });
 
@@ -38,6 +32,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (res.ok) location.reload();
     });
 
+    // Eliminar completados
     document.getElementById('btnEliminarCompletados').addEventListener('click', async () => {
       const confirmacion = await Swal.fire({
         title: '¿Eliminar todos los pedidos completados?',
@@ -51,7 +46,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (confirmacion.isConfirmed) {
         const res = await fetch(`${API_URL}/api/pedidos/completados`, {
           method: 'DELETE',
-          headers
+          credentials: 'include',
         });
 
         const data = await res.json();
@@ -73,7 +68,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const url = new URL(`${API_URL}/api/pedidos`);
     if (filtro !== 'todos') url.searchParams.append('completado', filtro);
 
-    const resPedidos = await fetch(url.toString(), { headers });
+    const resPedidos = await fetch(url.toString(), {
+      credentials: 'include',
+    });
     if (!resPedidos.ok) {
       alert('Error al cargar pedidos');
       return console.error(await resPedidos.text());
@@ -84,6 +81,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const thead = document.querySelector('#tablaPedidos thead tr');
     cuerpoTabla.innerHTML = '';
 
+    // Columna "Eliminar" solo si es admin y se filtra completados
     if (esAdmin && filtro === 'true' && !thead.querySelector('.col-eliminar')) {
       const th = document.createElement('th');
       th.textContent = 'Eliminar';
@@ -132,6 +130,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       cuerpoTabla.appendChild(fila);
     });
 
+    // Cambiar estatus
     document.querySelectorAll('.selectEstatus').forEach(select => {
       select.addEventListener('change', async (e) => {
         const pedidoId = e.target.dataset.id;
@@ -139,7 +138,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const res = await fetch(`${API_URL}/api/pedidos/estatus/${pedidoId}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ area: userDepartamento, estatus: nuevoEstatus })
         });
 
@@ -156,12 +156,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     });
 
+    // Comentarios
     document.querySelectorAll('.btnComentario').forEach(btn => {
       btn.addEventListener('click', async () => {
         comentarioPedidoId = btn.dataset.id;
         comentarioArea = btn.dataset.area;
 
-        const res = await fetch(`${API_URL}/api/pedidos/comentario/${comentarioPedidoId}`, { headers });
+        const res = await fetch(`${API_URL}/api/pedidos/comentario/${comentarioPedidoId}`, {
+          credentials: 'include',
+        });
         const data = await res.json();
 
         const textareaTodos = document.getElementById('comentarioTexto');
@@ -184,6 +187,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     });
 
+    // Eliminar pedido
     if (esAdmin && filtro === 'true') {
       document.querySelectorAll('.btnEliminar').forEach(btn => {
         btn.addEventListener('click', async () => {
@@ -200,7 +204,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (confirmacion.isConfirmed) {
             const res = await fetch(`${API_URL}/api/pedidos/${pedidoId}`, {
               method: 'DELETE',
-              headers
+              credentials: 'include',
             });
 
             const data = await res.json();
@@ -231,11 +235,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const fecha = new Date();
     const fechaFormateada = fecha.toLocaleString('es-MX', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
     });
 
     doc.setFontSize(16);
@@ -250,45 +250,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const tabla = document.querySelector('#tablaPedidos');
     const filas = Array.from(tabla.querySelectorAll('tbody tr')).map(tr => {
-      const celdas = tr.querySelectorAll('td');
-      return [
-        celdas[1]?.textContent || '',
-        celdas[2]?.textContent || '',
-        celdas[3]?.textContent || '',
-        celdas[4]?.textContent || '',
-        celdas[5]?.textContent || '',
-        celdas[6]?.textContent || '',
-      ];
+      const c = tr.querySelectorAll('td');
+      return [c[1]?.textContent || '', c[2]?.textContent || '', c[3]?.textContent || '', c[4]?.textContent || '', c[5]?.textContent || '', c[6]?.textContent || ''];
     });
 
     doc.autoTable({
       startY: 35,
       head: [['Número', 'Creación', 'Entrega', 'Ventas', 'Contabilidad', 'Producción']],
       body: filas,
-      styles: {
-        font: 'helvetica',
-        fontSize: 9,
-        textColor: 20,
-        cellPadding: 3
-      },
-      headStyles: {
-        fillColor: [13, 110, 253],
-        textColor: [255, 255, 255],
-        fontSize: 10,
-        halign: 'center'
-      },
-      alternateRowStyles: {
-        fillColor: [245, 245, 245]
-      }
+      styles: { font: 'helvetica', fontSize: 9, textColor: 20, cellPadding: 3 },
+      headStyles: { fillColor: [13, 110, 253], textColor: [255, 255, 255], fontSize: 10, halign: 'center' },
+      alternateRowStyles: { fillColor: [245, 245, 245] }
     });
 
     doc.save(`Listado_Pedidos_GlassCaribe_${fecha.toLocaleDateString('es-MX')}.pdf`);
   });
 
-  document.getElementById('logoutBtn').addEventListener('click', () => {
-    localStorage.removeItem('token');
-    window.location.href = 'login.html';
-  });
+  document.getElementById('logoutBtn').addEventListener('click', logoutAndRedirect);
 
   let comentarioPedidoId = null;
   let comentarioArea = null;
@@ -298,10 +276,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const res = await fetch(`${API_URL}/api/pedidos/comentario/${comentarioPedidoId}/${comentarioArea}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-      },
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ comentario })
     });
 
@@ -314,7 +290,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('eliminarComentario').addEventListener('click', async () => {
     const res = await fetch(`${API_URL}/api/pedidos/comentario/${comentarioPedidoId}/${comentarioArea}`, {
       method: 'DELETE',
-      headers
+      credentials: 'include',
     });
 
     const data = await res.json();
