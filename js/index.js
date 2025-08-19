@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
   } else {
-    // Ocultar completamente la columna "Eliminar" si NO es admin
+    // Oculta columna eliminar si NO es admin
     const thEliminar = document.getElementById('thEliminar');
     if (thEliminar) thEliminar.style.display = 'none';
   }
@@ -257,7 +257,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       case 'any': return true;
       case 'specific': return d1 ? v === d1 : true;
       case 'after': return d1 ? v > d1 : true;
-      case 'before': return d2 ? v < d2 : true; // d2 como "hasta" en modo "Antes de"
+      case 'before': return d2 ? v < d2 : true;
       case 'between':
         if (!d1 && !d2) return true;
         if (d1 && !d2) return v >= d1;
@@ -369,13 +369,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const fechaCreacionSolo = onlyDate(p.fecha_creacion);
 
-      // Comentarios (icon-only)
       const btnComentario = `
         <button class="btn-icon btnComentario" data-id="${p.id}" data-area="${userDepartamento}" title="Ver/agregar comentario" data-toggle="tooltip">
           <i class="bi bi-chat-dots"></i>
         </button>`;
 
-      // Eliminar (icon-only) — solo admin
       const btnEliminar = esAdmin ? `
         <button class="btn-icon btnEliminar text-danger" data-id="${p.id}" title="Eliminar pedido" data-toggle="tooltip">
           <i class="bi bi-trash-fill"></i>
@@ -410,7 +408,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         <td class="cell-eliminar">${btnEliminar}</td>
       `;
 
-      // Si NO es admin, oculta también las celdas de esa columna
       if (!esAdmin) {
         const thEliminar = document.getElementById('thEliminar');
         if (thEliminar) thEliminar.style.display = 'none';
@@ -498,7 +495,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (propio) textareaNuevo.value = propio.comentarios || '';
       }
 
-      $('#filtersModal').modal('hide'); // por si estuviera abierto
+      $('#filtersModal').modal('hide');
       $('#commentModal').modal('show');
       return;
     }
@@ -530,6 +527,48 @@ document.addEventListener('DOMContentLoaded', async () => {
           Swal.fire('Error', payload.message || 'No se pudo eliminar', 'error');
         }
       }
+    }
+  });
+
+  // ===== Botones modal comentarios =====
+  document.getElementById('guardarComentario').addEventListener('click', async () => {
+    if (!comentarioPedidoId || !comentarioArea) {
+      Swal.fire('Error', 'Abre el comentario desde el botón 📝 primero.', 'error');
+      return;
+    }
+    const comentario = document.getElementById('nuevoComentario').value.trim();
+
+    const res = await fetch(`${API_URL}/api/pedidos/comentario/${comentarioPedidoId}/${comentarioArea}`, {
+      method: 'PUT',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ comentario })
+    });
+
+    const data = await res.json().catch(() => ({}));
+    Swal.fire('Comentario', data.message || (res.ok ? 'Actualizado' : 'Error'), res.ok ? 'success' : 'error');
+    if (res.ok) {
+      $('#commentModal').modal('hide');
+      await cargarPedidos(els.filtroCompletado.value);
+    }
+  });
+
+  document.getElementById('eliminarComentario').addEventListener('click', async () => {
+    if (!comentarioPedidoId || !comentarioArea) {
+      Swal.fire('Error', 'Abre el comentario desde el botón 📝 primero.', 'error');
+      return;
+    }
+
+    const res = await fetch(`${API_URL}/api/pedidos/comentario/${comentarioPedidoId}/${comentarioArea}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+
+    const data = await res.json().catch(() => ({}));
+    Swal.fire('Comentario', data.message || (res.ok ? 'Eliminado' : 'Error'), res.ok ? 'success' : 'error');
+    if (res.ok) {
+      $('#commentModal').modal('hide');
+      await cargarPedidos(els.filtroCompletado.value);
     }
   });
 
@@ -608,21 +647,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   (function restore() {
     const st = loadState();
     if (!st) return;
-    // filtro rápido
     if (st.filtroCompletado) els.filtroCompletado.value = st.filtroCompletado;
-    // paginación
     paginationEnabled = !!st.paginationEnabled;
     pageSize = parseInt(st.pageSize || 10, 10);
     document.getElementById('pageSize').value = String(pageSize);
     applyPaginationUI();
-    // filtros
     const f = st.filters || {};
     dateMode.creacion = f.creacionMode || 'specific';
     dateMode.entrega = f.entregaMode || 'specific';
     ['fCreacionDesde','fCreacionHasta','fEntregaDesde','fEntregaHasta','fNumero'].forEach(id => { if (f[id] !== undefined) els[id].value = f[id]; });
     if (f.fDepartamento) els.fDepartamento.value = f.fDepartamento;
     if (f.fEstatus) els.fEstatus.value = f.fEstatus;
-    // pills UI
     document.querySelectorAll('#filtersModal .seg-pill[data-group="creacion"]').forEach(x => x.classList.remove('active'));
     document.querySelector(`#filtersModal .seg-pill[data-group="creacion"][data-mode="${dateMode.creacion}"]`)?.classList.add('active');
     document.querySelectorAll('#filtersModal .seg-pill[data-group="entrega"]').forEach(x => x.classList.remove('active'));
