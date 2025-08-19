@@ -1,9 +1,9 @@
-// login.js — login que confía en cookie httpOnly del backend
-import { redireccionarSiAutenticado } from './auth.js';
+// js/login.js — login híbrido (cookie + token)
+import { redireccionarSiAutenticado, saveToken } from './auth.js';
 
 const API_URL = (window.__ENV__ && window.__ENV__.API_URL) || 'https://backend-sigep-gc1.onrender.com';
 
-// Si ya está autenticado, redirige al dashboard
+// Si ya está logueado, vete al dashboard
 document.addEventListener('DOMContentLoaded', redireccionarSiAutenticado);
 
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -19,22 +19,26 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
   try {
     const res = await fetch(`${API_URL}/api/auth/login`, {
       method: 'POST',
-      credentials: 'include', // 👈 guarda cookie httpOnly
+      credentials: 'include',            // intenta set-cookie httpOnly
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     });
 
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
 
     if (res.ok) {
+      // Guarda token fallback (PWA/iOS)
+      if (data.token) saveToken(data.token);
+
       Swal.fire({
         icon: 'success',
         title: 'Bienvenido',
         text: 'Inicio de sesión exitoso',
-        timer: 1200,
+        timer: 900,
         showConfirmButton: false,
       });
-      setTimeout(() => (window.location.href = 'index.html'), 1300);
+
+      setTimeout(() => (window.location.href = 'index.html'), 900);
     } else {
       Swal.fire({
         icon: 'error',
@@ -44,6 +48,6 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     }
   } catch (error) {
     console.error('Error al iniciar sesión:', error);
-    Swal.fire({ icon: 'error', title: 'Error del servidor', text: 'No se pudo conectar con el servidor. Inténtalo más tarde.' });
+    Swal.fire({ icon: 'error', title: 'Error del servidor', text: 'No se pudo conectar. Inténtalo más tarde.' });
   }
 });

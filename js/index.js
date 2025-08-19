@@ -385,7 +385,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <td>${fechaCreacionSolo}</td>
         <td>${p.fecha_entrega}</td>
         <td>${ventas}</td>
-        <td>${contabilidad}</td>
+        <td>${Entregas}</td>
         <td>${produccion}</td>
         <td>
           <select data-id="${p.id}" class="selectEstatus">
