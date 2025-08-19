@@ -1,4 +1,4 @@
-// index.js — dashboard protegido usando cookie
+// js/index.js — dashboard protegido usando cookie
 import { requireAuth, logoutAndRedirect } from './auth.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -6,9 +6,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // 🔐 exige sesión y obtiene al usuario
   const userData = await requireAuth();
-  const userDepartamento = userData?.departamento;
+  const userDepartamento = (userData?.departamento || '').toLowerCase();
   const esAdmin = userData?.role_id === 1;
 
+  // Estado para comentarios (evita null/null)
+  let comentarioPedidoId = null;
+  let comentarioArea = null;
+
+  // Panel admin
   if (esAdmin) {
     document.getElementById('adminPanel').style.display = 'block';
 
@@ -18,7 +23,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       const numero_pedido = document.getElementById('numero_pedido').value.trim();
       const fecha_entrega = document.getElementById('fecha_entrega').value;
 
-      if (!numero_pedido || !fecha_entrega) return alert('Por favor, completa todos los campos.');
+      if (!numero_pedido || !fecha_entrega) {
+        Swal.fire('Campos requeridos', 'Por favor, completa todos los campos.', 'warning');
+        return;
+      }
 
       const res = await fetch(`${API_URL}/api/pedidos`, {
         method: 'POST',
@@ -27,19 +35,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         body: JSON.stringify({ numero_pedido, fecha_entrega })
       });
 
-      const data = await res.json();
-      alert(data.message);
-      if (res.ok) location.reload();
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        Swal.fire('Creado', data.message || 'Pedido creado correctamente', 'success');
+        document.getElementById('numero_pedido').value = '';
+        document.getElementById('fecha_entrega').value = '';
+        cargarPedidos(document.getElementById('filtroCompletado').value);
+      } else {
+        Swal.fire('Error', data.message || 'No se pudo crear el pedido', 'error');
+      }
     });
 
     // Eliminar completados
     document.getElementById('btnEliminarCompletados').addEventListener('click', async () => {
       const confirmacion = await Swal.fire({
-        title: '¿Eliminar todos los pedidos completados?',
-        text: 'Esta acción eliminará todos los pedidos con estatus completado y no se puede deshacer.',
+        title: '¿Eliminar pedidos completados?',
+        text: 'Esta acción no se puede deshacer.',
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: 'Sí, eliminar todos',
+        confirmButtonText: 'Sí, eliminar',
         cancelButtonText: 'Cancelar'
       });
 
@@ -48,35 +62,34 @@ document.addEventListener('DOMContentLoaded', async () => {
           method: 'DELETE',
           credentials: 'include',
         });
-
-        const data = await res.json();
-
-        Swal.fire({
-          icon: res.ok ? 'success' : 'error',
-          title: res.ok ? 'Pedidos eliminados' : 'Error',
-          text: data.message,
-          timer: 2500,
-          showConfirmButton: false
-        });
-
+        const data = await res.json().catch(() => ({}));
+        Swal.fire(res.ok ? 'Eliminados' : 'Error', data.message || '', res.ok ? 'success' : 'error');
         if (res.ok) cargarPedidos('true');
       }
     });
   }
 
+  // Cargar pedidos
   async function cargarPedidos(filtro = 'todos') {
     const url = new URL(`${API_URL}/api/pedidos`);
     if (filtro !== 'todos') url.searchParams.append('completado', filtro);
 
     const resPedidos = await fetch(url.toString(), { credentials: 'include' });
-    if (!resPedidos.ok) return console.error(await resPedidos.text());
+    if (!resPedidos.ok) {
+      console.error('Error pedidos:', await resPedidos.text());
+      Swal.fire('Error', 'No se pudo cargar la lista de pedidos', 'error');
+      return;
+    }
 
     const pedidos = await resPedidos.json();
     const cuerpoTabla = document.getElementById('cuerpoTabla');
     const thead = document.querySelector('#tablaPedidos thead tr');
     cuerpoTabla.innerHTML = '';
 
-    // Columna "Eliminar" solo si es admin y se filtra completados
+    // Mostrar botón "Eliminar completados" solo a admin
+    document.getElementById('btnEliminarCompletados').style.display = esAdmin ? 'inline-block' : 'none';
+
+    // Columna "Eliminar" solo si es admin y filtro=Completados
     if (esAdmin && filtro === 'true' && !thead.querySelector('.col-eliminar')) {
       const th = document.createElement('th');
       th.textContent = 'Eliminar';
@@ -92,9 +105,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       const contabilidad = p.estatus?.contabilidad?.estado || 'Sin estatus';
       const produccion = p.estatus?.produccion?.estado || 'Sin estatus';
 
-      // ✅ Botón ripple si hay comentarios
-      const tieneComentarios = Array.isArray(p.comentarios) ? p.comentarios.length > 0
-                              : typeof p.comentarios === 'string' && p.comentarios.trim() !== '';
+      // Detecta si hay comentarios en alguna área del pedido
+      const hayComentarios =
+        (p.estatus?.ventas?.comentarios || '').trim() !== '' ||
+        (p.estatus?.contabilidad?.comentarios || '').trim() !== '' ||
+        (p.estatus?.produccion?.comentarios || '').trim() !== '';
 
       fila.innerHTML = `
         <td>${p.id}</td>
@@ -113,13 +128,11 @@ document.addEventListener('DOMContentLoaded', async () => {
           </select>
         </td>
         <td>
-          <button class="btnComentario" data-id="${p.id}" data-area="${userDepartamento}" title="Ver/agregar comentario">
-            📝
-          </button>
+          <button class="btnComentario" data-id="${p.id}" data-area="${userDepartamento}" title="Ver/agregar comentario">📝</button>
         </td>
         <td class="col-ripple">
-          ${tieneComentarios ? `
-            <a href="#" class="intro-banner-vdo-play-btn pinkBg" data-id="${p.id}" title="Tiene comentarios">
+          ${hayComentarios ? `
+            <a href="javascript:void(0)" class="intro-banner-vdo-play-btn pinkBg" title="Tiene comentarios">
               <i class="glyphicon glyphicon-play whiteText"></i>
               <span class="ripple pinkBg"></span>
               <span class="ripple pinkBg"></span>
@@ -137,114 +150,104 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       cuerpoTabla.appendChild(fila);
     });
-
-    // Cambiar estatus
-    document.querySelectorAll('.selectEstatus').forEach(select => {
-      select.addEventListener('change', async (e) => {
-        const pedidoId = e.target.dataset.id;
-        const nuevoEstatus = e.target.value;
-
-        const res = await fetch(`${API_URL}/api/pedidos/estatus/${pedidoId}`, {
-          method: 'PUT',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ area: userDepartamento, estatus: nuevoEstatus })
-        });
-
-        const data = await res.json();
-        Swal.fire({
-          icon: res.ok ? 'success' : 'error',
-          title: res.ok ? '✅ Actualizado' : '❌ Error',
-          text: data.message || 'No se pudo actualizar',
-          timer: 2000,
-          showConfirmButton: false
-        });
-
-        cargarPedidos(document.getElementById('filtroCompletado').value);
-      });
-    });
-
-    // Comentarios
-    document.querySelectorAll('.btnComentario').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const comentarioPedidoId = btn.dataset.id;
-        const comentarioArea = btn.dataset.area;
-
-        const res = await fetch(`${API_URL}/api/pedidos/comentario/${comentarioPedidoId}`, {
-          credentials: 'include',
-        });
-        const data = await res.json();
-
-        const textareaTodos = document.getElementById('comentarioTexto');
-        const textareaNuevo = document.getElementById('nuevoComentario');
-        textareaTodos.value = '';
-        textareaNuevo.value = '';
-
-        if (!Array.isArray(data) || data.length === 0) {
-          textareaTodos.value = '[Sin comentarios previos]';
-        } else {
-          textareaTodos.value = data
-            .map(c => `🧭 ${c.area.toUpperCase()}:\n${c.comentarios}`)
-            .join('\n\n');
-
-          const propio = data.find(c => c.area === comentarioArea);
-          if (propio) textareaNuevo.value = propio.comentarios;
-        }
-
-        document.getElementById('comentarioModal').style.display = 'block';
-      });
-    });
-
-    // Eliminar pedido
-    if (esAdmin && filtro === 'true') {
-      document.querySelectorAll('.btnEliminar').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          const pedidoId = btn.dataset.id;
-          const confirmacion = await Swal.fire({
-            title: '¿Eliminar pedido?',
-            text: 'Esta acción no se puede deshacer.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Sí, eliminar',
-            cancelButtonText: 'Cancelar'
-          });
-
-          if (confirmacion.isConfirmed) {
-            const res = await fetch(`${API_URL}/api/pedidos/${pedidoId}`, {
-              method: 'DELETE',
-              credentials: 'include',
-            });
-
-            const data = await res.json();
-            Swal.fire({
-              icon: res.ok ? 'success' : 'error',
-              title: res.ok ? 'Eliminado' : 'Error',
-              text: data.message,
-              timer: 2000,
-              showConfirmButton: false
-            });
-
-            if (res.ok) cargarPedidos('true');
-          }
-        });
-      });
-    }
   }
 
-  cargarPedidos();
+  // Delegación: clicks dentro del tbody (comentarios, eliminar, actualizar)
+  const cuerpoTabla = document.getElementById('cuerpoTabla');
+  cuerpoTabla.addEventListener('change', async (e) => {
+    // Cambiar estatus
+    const sel = e.target.closest('.selectEstatus');
+    if (sel) {
+      const pedidoId = sel.dataset.id;
+      const nuevoEstatus = sel.value;
 
+      const res = await fetch(`${API_URL}/api/pedidos/estatus/${pedidoId}`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ area: userDepartamento, estatus: nuevoEstatus })
+      });
+
+      const data = await res.json().catch(() => ({}));
+      Swal.fire(res.ok ? 'Actualizado' : 'Error', data.message || '', res.ok ? 'success' : 'error');
+      cargarPedidos(document.getElementById('filtroCompletado').value);
+    }
+  });
+
+  cuerpoTabla.addEventListener('click', async (e) => {
+    // Abrir modal de comentarios
+    const btnComentario = e.target.closest('.btnComentario');
+    if (btnComentario) {
+      comentarioPedidoId = btnComentario.dataset.id || null;
+      comentarioArea = (btnComentario.dataset.area || userDepartamento || '').toLowerCase();
+
+      if (!comentarioPedidoId || !comentarioArea) {
+        Swal.fire('Error', 'No se pudo determinar el pedido o tu área.', 'error');
+        return;
+      }
+
+      const res = await fetch(`${API_URL}/api/pedidos/comentario/${comentarioPedidoId}`, {
+        credentials: 'include',
+      });
+      const data = await res.json().catch(() => []);
+
+      const textareaTodos = document.getElementById('comentarioTexto');
+      const textareaNuevo = document.getElementById('nuevoComentario');
+      textareaTodos.value = '';
+      textareaNuevo.value = '';
+
+      if (!Array.isArray(data) || data.length === 0) {
+        textareaTodos.value = '[Sin comentarios previos]';
+      } else {
+        textareaTodos.value = data
+          .map(c => `🧭 ${String(c.area || '').toUpperCase()}:\n${c.comentarios || ''}`)
+          .join('\n\n');
+
+        const propio = data.find(c => (c.area || '').toLowerCase() === comentarioArea);
+        if (propio) textareaNuevo.value = propio.comentarios || '';
+      }
+
+      document.getElementById('comentarioModal').style.display = 'block';
+      return;
+    }
+
+    // Eliminar pedido (solo admin, en lista de completados)
+    const btnEliminar = e.target.closest('.btnEliminar');
+    if (btnEliminar) {
+      const pedidoId = btnEliminar.dataset.id;
+      const confirmacion = await Swal.fire({
+        title: '¿Eliminar pedido?',
+        text: 'Esta acción no se puede deshacer.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+      });
+
+      if (confirmacion.isConfirmed) {
+        const res = await fetch(`${API_URL}/api/pedidos/${pedidoId}`, {
+          method: 'DELETE',
+          credentials: 'include',
+        });
+        const data = await res.json().catch(() => ({}));
+        Swal.fire(res.ok ? 'Eliminado' : 'Error', data.message || '', res.ok ? 'success' : 'error');
+        if (res.ok) cargarPedidos('true');
+      }
+    }
+  });
+
+  // Filtro
   document.getElementById('filtroCompletado').addEventListener('change', (e) => {
     cargarPedidos(e.target.value);
   });
 
+  // Exportar PDF
   document.getElementById('btnExportarPDF').addEventListener('click', () => {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
     const fecha = new Date();
-    const fechaFormateada = fecha.toLocaleString('es-MX', {
-      year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
-    });
+    const fechaFormateada = fecha.toLocaleString('es-MX', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
     doc.setFontSize(16);
     doc.setTextColor(40, 40, 40);
@@ -274,12 +277,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     doc.save(`Listado_Pedidos_GlassCaribe_${fecha.toLocaleDateString('es-MX')}.pdf`);
   });
 
+  // Logout
   document.getElementById('logoutBtn').addEventListener('click', logoutAndRedirect);
 
-  let comentarioPedidoId = null;
-  let comentarioArea = null;
-
+  // Modal comentarios: guardar / eliminar / cerrar
   document.getElementById('guardarComentario').addEventListener('click', async () => {
+    if (!comentarioPedidoId || !comentarioArea) {
+      Swal.fire('Error', 'Abre el comentario desde el botón 📝 primero.', 'error');
+      return;
+    }
     const comentario = document.getElementById('nuevoComentario').value.trim();
 
     const res = await fetch(`${API_URL}/api/pedidos/comentario/${comentarioPedidoId}/${comentarioArea}`, {
@@ -289,21 +295,37 @@ document.addEventListener('DOMContentLoaded', async () => {
       body: JSON.stringify({ comentario })
     });
 
-    const data = await res.json();
-    Swal.fire('Comentario', data.message, res.ok ? 'success' : 'error');
-    document.getElementById('comentarioModal').style.display = 'none';
-    cargarPedidos();
+    const data = await res.json().catch(() => ({}));
+    Swal.fire('Comentario', data.message || (res.ok ? 'Actualizado' : 'Error'), res.ok ? 'success' : 'error');
+    if (res.ok) {
+      document.getElementById('comentarioModal').style.display = 'none';
+      cargarPedidos(document.getElementById('filtroCompletado').value);
+    }
   });
 
   document.getElementById('eliminarComentario').addEventListener('click', async () => {
+    if (!comentarioPedidoId || !comentarioArea) {
+      Swal.fire('Error', 'Abre el comentario desde el botón 📝 primero.', 'error');
+      return;
+    }
+
     const res = await fetch(`${API_URL}/api/pedidos/comentario/${comentarioPedidoId}/${comentarioArea}`, {
       method: 'DELETE',
       credentials: 'include',
     });
 
-    const data = await res.json();
-    Swal.fire('Comentario', data.message, res.ok ? 'success' : 'error');
-    document.getElementById('comentarioModal').style.display = 'none';
-    cargarPedidos();
+    const data = await res.json().catch(() => ({}));
+    Swal.fire('Comentario', data.message || (res.ok ? 'Eliminado' : 'Error'), res.ok ? 'success' : 'error');
+    if (res.ok) {
+      document.getElementById('comentarioModal').style.display = 'none';
+      cargarPedidos(document.getElementById('filtroCompletado').value);
+    }
   });
+
+  document.getElementById('cerrarComentario').addEventListener('click', () => {
+    document.getElementById('comentarioModal').style.display = 'none';
+  });
+
+  // Primera carga
+  await cargarPedidos();
 });

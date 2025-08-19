@@ -8,255 +8,55 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<!-- Bootstrap & JQuery -->
-<!-- JQuery (versión compatible) -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-<!-- Popper (requerido por Bootstrap 4) -->
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-
-<!-- Bootstrap 4 estable -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js"></script>
-
-
-<style>
-.pinkBg {
-  background-color: #ed184f!important;
-  background-image: linear-gradient(90deg, #fd5581, #fd8b55);
-}
-.intro-banner-vdo-play-btn {
-  height: 40px;
-  width: 40px;
-  position: relative;
-  display: inline-block;
-  text-align: center;
-  border-radius: 100px;
-  z-index: 1;
-}
-.intro-banner-vdo-play-btn i {
-  line-height: 40px;
-  font-size: 20px;
-  color: white;
-}
-.intro-banner-vdo-play-btn .ripple {
-  position: absolute;
-  width: 100px;
-  height: 100px;
-  z-index: -1;
-  left: 50%;
-  top: 50%;
-  opacity: 0;
-  margin: -50px 0 0 -50px;
-  border-radius: 100px;
-  -webkit-animation: ripple 1.8s infinite;
-  animation: ripple 1.8s infinite;
-}
-@-webkit-keyframes ripple {
-  0% { opacity: 1; transform: scale(0); }
-  100% { opacity: 0; transform: scale(1); }
-}
-@keyframes ripple {
-  0% { opacity: 1; transform: scale(0); }
-  100% { opacity: 0; transform: scale(1); }
-}
-.intro-banner-vdo-play-btn .ripple:nth-child(2) {
-  animation-delay: .3s;
-}
-.intro-banner-vdo-play-btn .ripple:nth-child(3) {
-  animation-delay: .6s;
-}
-</style>
+  <!-- jQuery + Bootstrap 4 estable -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js"></script>
 
   <style>
+    .pinkBg { background-color: #ed184f!important; background-image: linear-gradient(90deg, #fd5581, #fd8b55); }
+    .intro-banner-vdo-play-btn { height: 40px; width: 40px; position: relative; display: inline-block; text-align: center; border-radius: 100px; z-index: 1; }
+    .intro-banner-vdo-play-btn i { line-height: 40px; font-size: 20px; color: white; }
+    .intro-banner-vdo-play-btn .ripple { position: absolute; width: 100px; height: 100px; z-index: -1; left: 50%; top: 50%; opacity: 0; margin: -50px 0 0 -50px; border-radius: 100px; animation: ripple 1.8s infinite; }
+    @keyframes ripple { 0% { opacity: 1; transform: scale(0); } 100% { opacity: 0; transform: scale(1); } }
+    .intro-banner-vdo-play-btn .ripple:nth-child(2){ animation-delay: .3s; }
+    .intro-banner-vdo-play-btn .ripple:nth-child(3){ animation-delay: .6s; }
+
     * { box-sizing: border-box; }
-    body {
-      background: url('./assets/fondo.png') center/cover no-repeat fixed;
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      margin: 0; padding: 0; color: #333;
-      backdrop-filter: brightness(0.95);
-    }
+    body { background: url('./assets/fondo.png') center/cover no-repeat fixed; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; padding: 0; color: #333; backdrop-filter: brightness(0.95); }
+    .main-container { max-width: 1400px; width: 95%; margin: 40px auto; padding: 30px; background-color: rgba(255, 255, 255, 0.96); border-radius: 1.5rem; box-shadow: 0 0 40px rgba(0,0,0,0.15); animation: fadeInUp 0.8s ease; }
+    .logo-container { text-align: center; margin-bottom: 20px; }
+    .logo-container img { width: 180px; filter: drop-shadow(0 0 8px rgba(0,0,0,0.2)); }
+    h2, h3 { text-align: center; font-weight: 800; margin-bottom: 25px; font-size: 1.8rem; background: linear-gradient(to right, #0d6efd, #20c997); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    #logoutBtn { float: right; margin-bottom: 10px; background-color: #dc3545; font-size: 0.95rem; }
 
-    .main-container {
-      max-width: 1400px;
-      width: 95%;
-      margin: 40px auto;
-      padding: 30px;
-      background-color: rgba(255, 255, 255, 0.96);
-      border-radius: 1.5rem;
-      box-shadow: 0 0 40px rgba(0,0,0,0.15);
-      animation: fadeInUp 0.8s ease;
-    }
+    form { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-bottom: 25px; }
+    input[type="text"], input[type="date"], select { padding: 14px; border-radius: 0.6rem; border: 1px solid #ccc; min-width: 240px; font-size: 1rem; transition: border-color 0.3s ease, box-shadow 0.3s ease; }
+    input:focus, select:focus { border-color: #0d6efd; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.2); outline: none; }
+    button { padding: 12px 24px; background: linear-gradient(to right, #0d6efd, #20c997); color: white; border: none; border-radius: 0.6rem; font-weight: bold; font-size: 1rem; cursor: pointer; transition: all 0.2s ease-in-out; }
+    button:hover { transform: scale(1.05); box-shadow: 0 6px 18px rgba(0, 123, 255, 0.25); }
 
-    .logo-container {
-      text-align: center;
-      margin-bottom: 20px;
-    }
+    .filtro-container { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 25px; }
+    .filtro-botones { display: flex; gap: 12px; align-items: center; }
 
-    .logo-container img {
-      width: 180px;
-      filter: drop-shadow(0 0 8px rgba(0,0,0,0.2));
-    }
+    .tabla-responsive { overflow-x: auto; border-radius: 0.9rem; }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; background-color: white; border-radius: 0.9rem; overflow: hidden; box-shadow: 0 0 15px rgba(0,0,0,0.05); font-size: 0.85rem; }
+    th, td { padding: 10px 14px; text-align: center; border-bottom: 1px solid #eee; vertical-align: middle; white-space: nowrap; }
+    th { background-color: #f8f9fa; color: #222; font-weight: 700; font-size: 0.9rem; }
+    td { color: #444; font-size: 0.85rem; }
+    tr:hover { background-color: #f9fafc; }
 
-    h2, h3 {
-      text-align: center;
-      font-weight: 800;
-      margin-bottom: 25px;
-      font-size: 1.8rem;
-      background: linear-gradient(to right, #0d6efd, #20c997);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    #logoutBtn {
-      float: right;
-      margin-bottom: 10px;
-      background-color: #dc3545;
-      font-size: 0.95rem;
-    }
-
-    form {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 15px;
-      margin-bottom: 25px;
-    }
-
-    input[type="text"],
-    input[type="date"],
-    select {
-      padding: 14px;
-      border-radius: 0.6rem;
-      border: 1px solid #ccc;
-      min-width: 240px;
-      font-size: 1rem;
-      transition: border-color 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    input:focus,
-    select:focus {
-      border-color: #0d6efd;
-      box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.2);
-      outline: none;
-    }
-
-    button {
-      padding: 12px 24px;
-      background: linear-gradient(to right, #0d6efd, #20c997);
-      color: white;
-      border: none;
-      border-radius: 0.6rem;
-      font-weight: bold;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: all 0.2s ease-in-out;
-    }
-
-    button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 6px 18px rgba(0, 123, 255, 0.25);
-    }
-
-    .filtro-container {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 25px;
-    }
-
-    .filtro-container label {
-      font-weight: 600;
-      margin-right: 8px;
-    }
-
-    .filtro-botones {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
-
-    #btnEliminarCompletados {
-      background-color: #dc3545;
-    }
-
-    /* ✅ Tabla para pantallas grandes */
-    .tabla-responsive {
-      overflow-x: auto;
-      border-radius: 0.9rem;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
-      background-color: white;
-      border-radius: 0.9rem;
-      overflow: hidden;
-      box-shadow: 0 0 15px rgba(0,0,0,0.05);
-      font-size: 0.85rem; /* más pequeño */
-    }
-
-    th, td {
-      padding: 10px 14px; /* más compacto */
-      text-align: center;
-      border-bottom: 1px solid #eee;
-      vertical-align: middle;
-      white-space: nowrap; /* ✅ en una sola línea */
-    }
-
-    th {
-      background-color: #f8f9fa;
-      color: #222;
-      font-weight: 700;
-      font-size: 0.9rem; /* encabezados más pequeños */
-    }
-
-    td {
-      color: #444;
-      font-size: 0.85rem;
-    }
-
-    tr:hover {
-      background-color: #f9fafc;
-    }
-
-    /* ✅ Tarjetas para móviles */
     @media (max-width: 768px) {
-      table { display: none; } /* ocultar tabla */
-      .pedido-card {
-        background: white;
-        border-radius: 1rem;
-        padding: 15px;
-        margin-bottom: 15px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-      }
-      .pedido-card h4 {
-        margin: 0 0 10px;
-        font-size: 1.2rem;
-        color: #0d6efd;
-      }
-      .pedido-info {
-        margin-bottom: 6px;
-        font-size: 0.95rem;
-      }
-      .pedido-info strong {
-        color: #20c997;
-      }
-      .pedido-actions {
-        margin-top: 10px;
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-      }
+      table { display: none; }
+      .pedido-card { background: white; border-radius: 1rem; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
+      .pedido-card h4 { margin: 0 0 10px; font-size: 1.2rem; color: #0d6efd; }
+      .pedido-info { margin-bottom: 6px; font-size: 0.95rem; }
+      .pedido-actions { margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap; }
     }
 
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 <body>
@@ -302,7 +102,7 @@
       </div>
     </div>
 
-    <!-- ✅ Tabla en PC -->
+    <!-- Tabla en PC -->
     <div class="tabla-responsive">
       <table id="tablaPedidos">
         <thead>
@@ -316,20 +116,20 @@
             <th>Producción</th>
             <th>Actualizar</th>
             <th>Comentarios</th>
-            <th>Notificación</th> 
+            <th>Notificación</th>
           </tr>
         </thead>
         <tbody id="cuerpoTabla"></tbody>
       </table>
     </div>
 
-    <!-- ✅ Tarjetas en móviles -->
+    <!-- Tarjetas en móviles -->
     <div id="cuerpoCards"></div>
   </div>
 
   <!-- Modal Comentarios -->
-  <div id="comentarioModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.3); z-index:1000;">
-    <div style="background:white; padding:20px; border-radius:10px; max-width:600px; margin:100px auto; margin-top:10%; box-shadow:0 0 20px rgba(0,0,0,0.2);">
+  <div id="comentarioModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.3); z-index:1000;">
+    <div style="background:white; padding:20px; border-radius:10px; max-width:600px; margin:10% auto; box-shadow:0 0 20px rgba(0,0,0,0.2);">
       <h4 style="margin-bottom: 10px;">💬 Comentarios por pedido</h4>
 
       <label for="comentarioTexto" style="font-weight:600;">🧾 Comentarios anteriores:</label>
@@ -341,14 +141,16 @@
       <div style="margin-top:15px; text-align:right;">
         <button id="guardarComentario">💾 Guardar</button>
         <button id="eliminarComentario" style="background-color:#dc3545;">🗑 Eliminar</button>
-        <button onclick="document.getElementById('comentarioModal').style.display='none'">❌ Cerrar</button>
+        <button id="cerrarComentario">❌ Cerrar</button>
       </div>
     </div>
   </div>
 
-  <!-- Scripts -->
+  <!-- Libs PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+  <!-- App -->
   <script type="module" src="./js/index.js"></script>
 </body>
 </html>
