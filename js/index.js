@@ -97,28 +97,42 @@ document.addEventListener('DOMContentLoaded', async () => {
       const contabilidad = p.estatus?.contabilidad?.estado || 'Sin estatus';
       const produccion = p.estatus?.produccion?.estado || 'Sin estatus';
 
-      fila.innerHTML = `
-        <td>${p.id}</td>
-        <td>${p.numero_pedido}</td>
-        <td>${p.fecha_creacion}</td>
-        <td>${p.fecha_entrega}</td>
-        <td>${ventas}</td>
-        <td>${contabilidad}</td>
-        <td>${produccion}</td>
-        <td>
-          <select data-id="${p.id}" class="selectEstatus">
-            <option disabled selected>Actualizar estatus</option>
-            <option value="pendiente">Pendiente</option>
-            <option value="en proceso">En proceso</option>
-            <option value="completado">Completado</option>
-          </select>
-        </td>
-        <td>
-          <button class="btnComentario" data-id="${p.id}" data-area="${userDepartamento}" title="Ver/agregar comentario">
-            📝
-          </button>
-        </td>
-      `;
+     fila.innerHTML = `
+  <td>${p.id}</td>
+  <td>${p.numero_pedido}</td>
+  <td>${p.fecha_creacion}</td>
+  <td>${p.fecha_entrega}</td>
+  <td>${ventas}</td>
+  <td>${contabilidad}</td>
+  <td>${produccion}</td>
+  <td>
+    <select data-id="${p.id}" class="selectEstatus">
+      <option disabled selected>Actualizar estatus</option>
+      <option value="pendiente">Pendiente</option>
+      <option value="en proceso">En proceso</option>
+      <option value="completado">Completado</option>
+    </select>
+  </td>
+  <td>
+    <button class="btnComentario" data-id="${p.id}" data-area="${userDepartamento}" title="Ver/agregar comentario">
+      📝
+    </button>
+  </td>
+  <td class="col-ripple">
+    ${
+      p.comentarios && p.comentarios.length > 0
+      ? `
+        <a href="#" class="intro-banner-vdo-play-btn pinkBg" data-id="${p.id}" title="Tiene comentarios">
+          <i class="glyphicon glyphicon-play whiteText"></i>
+          <span class="ripple pinkBg"></span>
+          <span class="ripple pinkBg"></span>
+          <span class="ripple pinkBg"></span>
+        </a>
+      `
+      : ''
+    }
+  </td>
+`;
 
       if (esAdmin && filtro === 'true') {
         const td = document.createElement('td');
