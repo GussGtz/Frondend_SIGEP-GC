@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const userDepartamento = (userData?.departamento || '').toLowerCase();
   const esAdmin = userData?.role_id === 1;
 
-  // Estado global (comentarios, paginado, filtros)
+  // Estado global
   let comentarioPedidoId = null;
   let comentarioArea = null;
   let rawPedidos = [];
@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   let pageSize = 10;
   let currentPage = 1;
 
-  // ======= Helpers de fechas/strings =======
+  // ======= Helpers =======
   const onlyDate = (s) => (String(s || '').split(' ')[0] || '').trim();
   const norm = (s) => String(s || '').toLowerCase();
 
@@ -48,7 +48,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         Swal.fire('Creado', data.message || 'Pedido creado correctamente', 'success');
         document.getElementById('numero_pedido').value = '';
         document.getElementById('fecha_entrega').value = '';
-        // Recarga manteniendo filtros/paginación
         await cargarPedidos(document.getElementById('filtroCompletado').value);
       } else {
         Swal.fire('Error', data.message || 'No se pudo crear el pedido', 'error');
@@ -78,35 +77,60 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // ======= Filtros UI =======
+  // ======= Elementos =======
   const els = {
     filtroCompletado: document.getElementById('filtroCompletado'),
+    // date groups (seg pills):
+    segPills: document.querySelectorAll('.seg-pill'),
+    // date inputs:
     fCreacionDesde: document.getElementById('fCreacionDesde'),
     fCreacionHasta: document.getElementById('fCreacionHasta'),
     fEntregaDesde: document.getElementById('fEntregaDesde'),
     fEntregaHasta: document.getElementById('fEntregaHasta'),
+    // simple filters:
     fNumero: document.getElementById('fNumero'),
     fDepartamento: document.getElementById('fDepartamento'),
     fEstatus: document.getElementById('fEstatus'),
+    // actions:
     btnLimpiarFiltros: document.getElementById('btnLimpiarFiltros'),
+    // pagination
     chkPaginar: document.getElementById('chkPaginar'),
     pageSize: document.getElementById('pageSize'),
     paginationBar: document.getElementById('paginationBar'),
     btnPrev: document.getElementById('btnPrev'),
     btnNext: document.getElementById('btnNext'),
     pageInfo: document.getElementById('pageInfo'),
+    // admin btn
     btnEliminarCompletados: document.getElementById('btnEliminarCompletados'),
   };
 
+  // Estado de modo de fechas
+  const dateMode = { creacion: 'specific', entrega: 'specific' };
+
+  // Manejador de “segment pills”
+  els.segPills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      const group = pill.dataset.group;   // 'creacion' | 'entrega'
+      const mode = pill.dataset.mode;     // 'any'|'specific'|'after'|'before'|'between'
+      // limpiar activos del grupo
+      document.querySelectorAll(`.seg-pill[data-group="${group}"]`).forEach(x => x.classList.remove('active'));
+      pill.classList.add('active');
+      dateMode[group] = mode;
+      currentPage = 1;
+      render();
+    });
+  });
+
+  // ======= Filtros =======
   const getFilters = () => ({
-    completado: els.filtroCompletado.value, // 'todos' | 'true' | 'false' (ya lo hace el backend, pero lo mantenemos)
+    completado: els.filtroCompletado.value,
     creacionDesde: els.fCreacionDesde.value || null,
     creacionHasta: els.fCreacionHasta.value || null,
     entregaDesde: els.fEntregaDesde.value || null,
     entregaHasta: els.fEntregaHasta.value || null,
     numero: norm(els.fNumero.value),
-    departamento: els.fDepartamento.value, // 'todos' | ventas | contabilidad | produccion
-    estatus: els.fEstatus.value, // 'todos' | pendiente | en proceso | completado | sin estatus
+    departamento: els.fDepartamento.value,
+    estatus: els.fEstatus.value,
   });
 
   const clearFilters = () => {
@@ -117,24 +141,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     els.fNumero.value = '';
     els.fDepartamento.value = 'todos';
     els.fEstatus.value = 'todos';
+    // reset pills to 'specific'
+    document.querySelectorAll('.seg-pill[data-group="creacion"]').forEach(x => x.classList.remove('active'));
+    document.querySelector('.seg-pill[data-group="creacion"][data-mode="specific"]').classList.add('active');
+    document.querySelectorAll('.seg-pill[data-group="entrega"]').forEach(x => x.classList.remove('active'));
+    document.querySelector('.seg-pill[data-group="entrega"][data-mode="specific"]').classList.add('active');
+    dateMode.creacion = 'specific';
+    dateMode.entrega = 'specific';
     currentPage = 1;
     render();
   };
 
   // ======= Filtrado client-side =======
-  const matchesDateRange = (dateStr, d1, d2) => {
-    if (!dateStr) return false;
-    const d = onlyDate(dateStr);
-    if (d1 && d < d1) return false;
-    if (d2 && d > d2) return false;
-    return true;
-  };
-
-  const matchesEntregaRange = (dateStr, d1, d2) => {
-    if (!dateStr) return false;
-    if (d1 && dateStr < d1) return false;
-    if (d2 && dateStr > d2) return false;
-    return true;
+  const matchDateByMode = (valueYMD, mode, d1, d2) => {
+    if (!valueYMD) return false;
+    // valueYMD es 'YYYY-MM-DD' (creación ya la normalizamos)
+    const v = valueYMD;
+    switch (mode) {
+      case 'any': return true;
+      case 'specific': return d1 ? v === d1 : true;
+      case 'after': return d1 ? v > d1 : true;
+      case 'before': return d1 ? v < d1 : true;
+      case 'between': {
+        if (!d1 && !d2) return true;
+        if (d1 && !d2) return v >= d1;
+        if (!d1 && d2) return v <= d2;
+        return v >= d1 && v <= d2;
+      }
+      default: return true;
+    }
   };
 
   const pedidoTieneEstatus = (p, depto, est) => {
@@ -151,26 +186,35 @@ document.addEventListener('DOMContentLoaded', async () => {
       return val === est;
     }
 
-    // depto = todos
     if (est === 'todos') return true;
     return Object.values(estAreas).some(v => v === est);
   };
 
   const filterPedidos = (list) => {
     const f = getFilters();
-
     let out = [...list];
 
-    // Filtros avanzados
-    if (f.creacionDesde || f.creacionHasta) {
-      out = out.filter(p => matchesDateRange(p.fecha_creacion, f.creacionDesde, f.creacionHasta));
-    }
-    if (f.entregaDesde || f.entregaHasta) {
-      out = out.filter(p => matchesEntregaRange(p.fecha_entrega, f.entregaDesde, f.entregaHasta));
-    }
+    // Fecha de creación (usar solo fecha)
+    out = out.filter(p => matchDateByMode(
+      onlyDate(p.fecha_creacion),
+      dateMode.creacion,
+      f.creacionDesde,
+      f.creacionHasta
+    ));
+
+    // Fecha de entrega (YYYY-MM-DD ya viene limpio)
+    out = out.filter(p => matchDateByMode(
+      p.fecha_entrega,
+      dateMode.entrega,
+      f.entregaDesde,
+      f.entregaHasta
+    ));
+
     if (f.numero) {
       out = out.filter(p => norm(p.numero_pedido).includes(f.numero));
     }
+
+    // Estatus por departamento (tal cual pediste: filtra el estatus de los departamentos)
     if (f.departamento !== 'todos' || f.estatus !== 'todos') {
       out = out.filter(p => pedidoTieneEstatus(p, f.departamento, f.estatus));
     }
@@ -181,7 +225,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ======= Render =======
   function render() {
     const cuerpoTabla = document.getElementById('cuerpoTabla');
-    const thead = document.querySelector('#tablaPedidos thead tr');
     cuerpoTabla.innerHTML = '';
 
     // Mostrar botón "Eliminar completados" solo a admin
@@ -208,17 +251,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       els.paginationBar.style.display = 'none';
     }
 
-    // Columna "Eliminar" solo si es admin y filtro=Completados
-    const filtro = els.filtroCompletado.value;
-    if (esAdmin && filtro === 'true' && !thead.querySelector('.col-eliminar')) {
-      const th = document.createElement('th');
-      th.textContent = 'Eliminar';
-      th.classList.add('col-eliminar');
-      thead.appendChild(th);
-    } else if ((!esAdmin || filtro !== 'true') && thead.querySelector('.col-eliminar')) {
-      thead.querySelector('.col-eliminar').remove();
-    }
-
     // Render filas
     working.forEach(p => {
       const fila = document.createElement('tr');
@@ -231,7 +263,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         (p.estatus?.contabilidad?.comentarios || '').trim() !== '' ||
         (p.estatus?.produccion?.comentarios || '').trim() !== '';
 
-      const fechaCreacionSolo = onlyDate(p.fecha_creacion); // ✅ solo fecha
+      const fechaCreacionSolo = onlyDate(p.fecha_creacion);
+
       fila.innerHTML = `
         <td>${p.id}</td>
         <td>${p.numero_pedido}</td>
@@ -249,7 +282,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           </select>
         </td>
         <td>
-          <button class="btnComentario" data-id="${p.id}" data-area="${userDepartamento}" title="Ver/agregar comentario">📝</button>
+          <button class="btnComentario btn btn-light btn-sm" data-id="${p.id}" data-area="${userDepartamento}" title="Ver/agregar comentario">📝</button>
         </td>
         <td class="col-ripple">
           ${hayComentarios ? `
@@ -260,20 +293,16 @@ document.addEventListener('DOMContentLoaded', async () => {
               <span class="ripple pinkBg"></span>
             </a>` : ''}
         </td>
+        <td>
+          ${esAdmin ? `<button class="btnEliminar btn btn-outline-danger btn-sm" data-id="${p.id}" title="Eliminar"><i class="bi bi-trash-fill"></i></button>` : ''}
+        </td>
       `;
-
-      if (esAdmin && filtro === 'true') {
-        const td = document.createElement('td');
-        td.classList.add('col-eliminar');
-        td.innerHTML = `<button class="btnEliminar" data-id="${p.id}" style="color:#dc3545; background:none; border:none; font-size:1.2rem;" title="Eliminar"><i class="bi bi-trash-fill"></i></button>`;
-        fila.appendChild(td);
-      }
 
       cuerpoTabla.appendChild(fila);
     });
   }
 
-  // ======= Cargar pedidos desde backend =======
+  // ======= Cargar pedidos =======
   async function cargarPedidos(filtro = 'todos') {
     const url = new URL(`${API_URL}/api/pedidos`);
     if (filtro !== 'todos') url.searchParams.append('completado', filtro);
@@ -286,16 +315,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     rawPedidos = await resPedidos.json();
-
-    // Mostrar botón Eliminar completados solo a admin
-    els.btnEliminarCompletados.style.display = esAdmin ? 'inline-block' : 'none';
-
     currentPage = 1;
     render();
   }
 
-  // ======= Delegación de eventos en la tabla =======
+  // ======= Delegación de eventos en tabla =======
   const cuerpoTabla = document.getElementById('cuerpoTabla');
+
+  // Cambiar estatus
   cuerpoTabla.addEventListener('change', async (e) => {
     const sel = e.target.closest('.selectEstatus');
     if (sel) {
@@ -315,8 +342,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+  // Comentarios + Eliminar
   cuerpoTabla.addEventListener('click', async (e) => {
-    // Abrir modal de comentarios
+    // Abrir modal comentarios
     const btnComentario = e.target.closest('.btnComentario');
     if (btnComentario) {
       comentarioPedidoId = btnComentario.dataset.id || null;
@@ -348,11 +376,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (propio) textareaNuevo.value = propio.comentarios || '';
       }
 
-      document.getElementById('comentarioModal').style.display = 'block';
+      $('#commentModal').modal('show');
       return;
     }
 
-    // Eliminar pedido (solo admin, en lista de completados)
+    // Eliminar pedido (SIEMPRE visible para admin)
     const btnEliminar = e.target.closest('.btnEliminar');
     if (btnEliminar) {
       const pedidoId = btnEliminar.dataset.id;
@@ -372,12 +400,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         const data = await res.json().catch(() => ({}));
         Swal.fire(res.ok ? 'Eliminado' : 'Error', data.message || '', res.ok ? 'success' : 'error');
-        if (res.ok) await cargarPedidos('true');
+        if (res.ok) await cargarPedidos(els.filtroCompletado.value);
       }
     }
   });
 
-  // ======= Eventos de filtros/paginación =======
+  // ======= Eventos de filtros / paginación =======
   els.filtroCompletado.addEventListener('change', async (e) => {
     await cargarPedidos(e.target.value);
   });
@@ -401,19 +429,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   els.btnPrev.addEventListener('click', () => {
-    if (currentPage > 1) {
-      currentPage--;
-      render();
-    }
+    if (currentPage > 1) { currentPage--; render(); }
   });
 
   els.btnNext.addEventListener('click', () => {
-    // el límite real lo calcula render()
-    currentPage++;
-    render();
+    currentPage++; render();
   });
 
-  // ======= Exportar PDF =======
+  // ======= PDF =======
   document.getElementById('btnExportarPDF').addEventListener('click', () => {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -431,7 +454,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     doc.setTextColor(100);
     doc.text(`Generado el ${fechaFormateada}`, 105, 28, { align: 'center' });
 
-    // Usa lo que se ve en la tabla (ya paginado/filtrado)
     const tabla = document.querySelector('#tablaPedidos');
     const filas = Array.from(tabla.querySelectorAll('tbody tr')).map(tr => {
       const c = tr.querySelectorAll('td');
@@ -453,7 +475,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ======= Logout =======
   document.getElementById('logoutBtn').addEventListener('click', logoutAndRedirect);
 
-  // ======= Modal comentarios =======
+  // ======= Modal Comentarios: guardar / eliminar / cerrar =======
   document.getElementById('guardarComentario').addEventListener('click', async () => {
     if (!comentarioPedidoId || !comentarioArea) {
       Swal.fire('Error', 'Abre el comentario desde el botón 📝 primero.', 'error');
@@ -471,7 +493,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const data = await res.json().catch(() => ({}));
     Swal.fire('Comentario', data.message || (res.ok ? 'Actualizado' : 'Error'), res.ok ? 'success' : 'error');
     if (res.ok) {
-      document.getElementById('comentarioModal').style.display = 'none';
+      $('#commentModal').modal('hide');
       await cargarPedidos(document.getElementById('filtroCompletado').value);
     }
   });
@@ -490,13 +512,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const data = await res.json().catch(() => ({}));
     Swal.fire('Comentario', data.message || (res.ok ? 'Eliminado' : 'Error'), res.ok ? 'success' : 'error');
     if (res.ok) {
-      document.getElementById('comentarioModal').style.display = 'none';
+      $('#commentModal').modal('hide');
       await cargarPedidos(document.getElementById('filtroCompletado').value);
     }
   });
 
   document.getElementById('cerrarComentario').addEventListener('click', () => {
-    document.getElementById('comentarioModal').style.display = 'none';
+    $('#commentModal').modal('hide');
   });
 
   // ======= Primera carga =======
