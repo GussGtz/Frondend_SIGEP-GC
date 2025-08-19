@@ -9,83 +9,62 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  <!-- jQuery + Bootstrap -->
+  <!-- jQuery + Bootstrap 4 estable -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js"></script>
 
-  <!-- Font Awesome (para la X del modal de comentarios) -->
+  <!-- FontAwesome (iconos del modal de comentarios) -->
   <script src="https://use.fontawesome.com/5ac93d4ca8.js"></script>
 
   <style>
-    /* Ripple bell */
-    .pinkBg{background-color:#ed184f!important;background-image:linear-gradient(90deg,#fd5581,#fd8b55)}
-    .intro-banner-vdo-play-btn{height:40px;width:40px;position:relative;display:inline-block;text-align:center;border-radius:100px;z-index:1}
-    .intro-banner-vdo-play-btn i{line-height:40px;font-size:20px;color:white}
-    .intro-banner-vdo-play-btn .ripple{position:absolute;width:100px;height:100px;z-index:-1;left:50%;top:50%;opacity:0;margin:-50px 0 0 -50px;border-radius:100px;animation:ripple 1.8s infinite}
-    @keyframes ripple{0%{opacity:1;transform:scale(0)}100%{opacity:0;transform:scale(1)}}
-    .intro-banner-vdo-play-btn .ripple:nth-child(2){animation-delay:.3s}
-    .intro-banner-vdo-play-btn .ripple:nth-child(3){animation-delay:.6s}
+    .pinkBg { background-color: #ed184f!important; background-image: linear-gradient(90deg, #fd5581, #fd8b55); }
+    .intro-banner-vdo-play-btn { height: 40px; width: 40px; position: relative; display: inline-block; text-align: center; border-radius: 100px; z-index: 1; }
+    .intro-banner-vdo-play-btn i { line-height: 40px; font-size: 20px; color: white; }
+    .intro-banner-vdo-play-btn .ripple { position: absolute; width: 100px; height: 100px; z-index: -1; left: 50%; top: 50%; opacity: 0; margin: -50px 0 0 -50px; border-radius: 100px; animation: ripple 1.8s infinite; }
+    @keyframes ripple { 0% { opacity: 1; transform: scale(0); } 100% { opacity: 0; transform: scale(1); } }
+    .intro-banner-vdo-play-btn .ripple:nth-child(2){ animation-delay: .3s; }
+    .intro-banner-vdo-play-btn .ripple:nth-child(3){ animation-delay: .6s; }
 
-    *{box-sizing:border-box}
-    body{background:url('./assets/fondo.png') center/cover no-repeat fixed;font-family:'Plus Jakarta Sans',sans-serif;margin:0;padding:0;color:#333;backdrop-filter:brightness(0.95)}
-    .main-container{max-width:1400px;width:95%;margin:40px auto;padding:30px;background-color:rgba(255,255,255,.96);border-radius:1.5rem;box-shadow:0 0 40px rgba(0,0,0,.15)}
-    .logo-container{text-align:center;margin-bottom:20px}
-    .logo-container img{width:180px;filter:drop-shadow(0 0 8px rgba(0,0,0,.2))}
-    h2,h3{text-align:center;font-weight:800;margin-bottom:25px;font-size:1.8rem;background:linear-gradient(to right,#0d6efd,#20c997);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-    #logoutBtn{float:right;margin-bottom:10px;background-color:#dc3545;font-size:.95rem}
+    * { box-sizing: border-box; }
+    body { background: url('./assets/fondo.png') center/cover no-repeat fixed; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; padding: 0; color: #333; backdrop-filter: brightness(0.95); }
+    .main-container { max-width: 1400px; width: 95%; margin: 40px auto; padding: 30px; background-color: rgba(255, 255, 255, 0.96); border-radius: 1.5rem; box-shadow: 0 0 40px rgba(0,0,0,0.15); }
+    .logo-container { text-align: center; margin-bottom: 20px; }
+    .logo-container img { width: 180px; filter: drop-shadow(0 0 8px rgba(0,0,0,0.2)); }
+    h2, h3 { text-align: center; font-weight: 800; margin-bottom: 25px; font-size: 1.8rem; background: linear-gradient(to right, #0d6efd, #20c997); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    #logoutBtn { float: right; margin-bottom: 10px; background-color: #dc3545; font-size: 0.95rem; }
 
-    form{display:flex;flex-wrap:wrap;justify-content:center;gap:15px;margin-bottom:25px}
-    input[type="text"],input[type="date"],select{padding:10px 12px;border-radius:.6rem;border:1px solid #ccc;min-width:180px;font-size:.95rem}
-    input:focus,select:focus{border-color:#0d6efd;box-shadow:0 0 0 .25rem rgba(13,110,253,.2);outline:none}
-    button{padding:10px 18px;background:linear-gradient(to right,#0d6efd,#20c997);color:#fff;border:none;border-radius:.6rem;font-weight:bold;font-size:.95rem;cursor:pointer;transition:all .2s}
-    button:hover{transform:scale(1.05);box-shadow:0 6px 18px rgba(0,123,255,.25)}
+    form { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-bottom: 25px; }
+    input[type="text"], input[type="date"], select { padding: 10px 12px; border-radius: 0.6rem; border: 1px solid #ccc; min-width: 180px; font-size: 0.95rem; }
+    input:focus, select:focus { border-color: #0d6efd; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.2); outline: none; }
+    button { padding: 10px 18px; background: linear-gradient(to right, #0d6efd, #20c997); color: white; border: none; border-radius: 0.6rem; font-weight: bold; font-size: 0.95rem; cursor: pointer; transition: all 0.2s ease-in-out; }
+    button:hover { transform: scale(1.05); box-shadow: 0 6px 18px rgba(0, 123, 255, 0.25); }
 
-    /* Botón filtros: gris fuerte */
-    .btn-filters{background:#fff;border:1px solid #ced4da;color:#495057}
-    .btn-filters:hover{background:#f8f9fa;color:#343a40}
+    .tabla-responsive { overflow-x: auto; border-radius: 0.9rem; }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; background-color: white; border-radius: 0.9rem; overflow: hidden; box-shadow: 0 0 15px rgba(0,0,0,0.05); font-size: 0.85rem; }
+    th, td { padding: 10px 14px; text-align: center; border-bottom: 1px solid #eee; vertical-align: middle; white-space: nowrap; }
+    th { background-color: #f8f9fa; color: #222; font-weight: 700; font-size: 0.9rem; }
+    td { color: #444; font-size: 0.85rem; }
+    tr:hover { background-color: #f9fafc; }
 
-    /* Reset para botón de cerrar en MODALES (que no herede degradado) */
-    .modal .close{
-      background:transparent!important;
-      border:0!important;
-      box-shadow:none!important;
-      color:#6c757d!important;
-      padding:.5rem 1rem!important;
-      border-radius:.25rem!important;
-    }
-    .modal .close:hover{color:#343a40!important;background:transparent!important}
+    .pagination-bar { display:flex; gap:10px; align-items:center; justify-content:flex-end; margin: 8px 0 14px; }
+    .pagination-bar .page-btn { background:#f1f3f5; color:#333; }
 
-    .tabla-responsive{overflow-x:auto;border-radius:.9rem}
-    table{width:100%;border-collapse:separate;border-spacing:0;background-color:#fff;border-radius:.9rem;overflow:hidden;box-shadow:0 0 15px rgba(0,0,0,.05);font-size:.85rem}
-    th,td{padding:10px 14px;text-align:center;border-bottom:1px solid #eee;vertical-align:middle;white-space:nowrap}
-    th{background-color:#f8f9fa;color:#222;font-weight:700;font-size:.9rem}
-    td{color:#444;font-size:.85rem}
-    tr:hover{background-color:#f9fafc}
-
-    .pagination-bar{display:flex;gap:10px;align-items:center;justify-content:flex-end;margin:8px 0 14px}
-    .pagination-bar .page-btn{background:#f1f3f5;color:#333}
-
-    /* icon-only buttons */
-    .btn-icon{background:transparent;border:none;padding:6px;line-height:1;border-radius:6px;cursor:pointer}
-    .btn-icon:hover{background:rgba(0,0,0,.05)}
-    .btn-icon i{font-size:1.05rem;color:#0d6efd}
-
-    /* Pills (modal filtros) */
-    .seg-pill{border:1px solid #CFD8DC;color:#6c757d;cursor:pointer;padding:.35rem .6rem;border-radius:.5rem}
-    .seg-pill.active{background:#304FFE;color:#fff;border-color:#304FFE}
+    /* Pills segmentadas (modal filtros) */
+    .seg-pill { border:1px solid #CFD8DC; color:#6c757d; cursor:pointer; padding:.35rem .6rem; border-radius:.5rem; }
+    .seg-pill.active { background:#304FFE; color:#fff; border-color:#304FFE; }
 
     /* Modal Comentarios */
-    .rating{display:inline-flex;flex-direction:row-reverse}
-    .rating>input{display:none}
-    .rating>label{position:relative;width:28px;font-size:30px;color:#ff0000;cursor:pointer}
-    .rating>label::before{content:"\2605";position:absolute;opacity:0}
-    .rating>label:hover:before,.rating>label:hover~label:before{opacity:1!important}
-    .rating>input:checked~label:before{opacity:1}
-    .rating:hover>input:checked~label:before{opacity:.4}
+    .rating { display:inline-flex; flex-direction:row-reverse; }
+    .rating>input{ display:none; }
+    .rating>label{ position:relative; width:28px; font-size:30px; color:#ff0000; cursor:pointer; }
+    .rating>label::before{ content:"\2605"; position:absolute; opacity:0; }
+    .rating>label:hover:before, .rating>label:hover~label:before{ opacity:1 !important; }
+    .rating>input:checked~label:before{ opacity:1; }
+    .rating:hover>input:checked~label:before{ opacity:.4; }
 
-    @media (max-width:768px){table{display:none}}
+    @media (max-width: 768px) { table{ display:none; } }
   </style>
 </head>
 <body>
@@ -96,12 +75,12 @@
 
     <h2>Gestión de Pedidos</h2>
 
-    <div style="text-align:right;">
+    <div style="text-align: right;">
       <button id="logoutBtn"><i class="bi bi-box-arrow-right me-1"></i> Cerrar sesión</button>
     </div>
 
     <!-- Panel Admin -->
-    <div id="adminPanel" style="display:none;margin-top:20px;">
+    <div id="adminPanel" style="display: none; margin-top: 20px;">
       <h3>Nuevo Pedido</h3>
       <form id="formNuevoPedido">
         <input type="text" id="numero_pedido" placeholder="Número de pedido" required>
@@ -112,7 +91,7 @@
 
     <h3>Pedidos registrados</h3>
 
-    <!-- Barra superior -->
+    <!-- Barra superior: filtro rápido + paginación + acciones -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
       <div class="mb-2">
         <label for="filtroCompletado" class="font-weight-bold mb-0 mr-2">Filtrar pedidos:</label>
@@ -124,7 +103,7 @@
       </div>
 
       <div class="d-flex align-items-center mb-2">
-        <button id="btnOpenFilters" class="btn btn-filters btn-sm mr-3">
+        <button id="btnOpenFilters" class="btn btn-outline-secondary btn-sm mr-3">
           <i class="bi bi-funnel mr-1"></i> Filtros avanzados
         </button>
         <div class="mr-3">
@@ -136,7 +115,6 @@
             <option value="50">50</option>
           </select>
         </div>
-        <span id="totalInfo" class="text-muted mr-3">0 registros</span>
         <button id="btnEliminarCompletados" style="display:none;" class="btn btn-danger btn-sm mr-2">
           <i class="bi bi-trash-fill mr-1"></i> Eliminar completados
         </button>
@@ -146,14 +124,14 @@
       </div>
     </div>
 
-    <!-- Paginación -->
+    <!-- Paginación (se muestra solo si se activa) -->
     <div class="pagination-bar" id="paginationBar" style="display:none;">
       <button class="page-btn btn btn-light btn-sm" id="btnPrev">« Anterior</button>
       <span class="page-info mx-2" id="pageInfo">Página 1 de 1</span>
       <button class="page-btn btn btn-light btn-sm" id="btnNext">Siguiente »</button>
     </div>
 
-    <!-- Tabla -->
+    <!-- Tabla en PC -->
     <div class="tabla-responsive">
       <table id="tablaPedidos">
         <thead>
@@ -168,18 +146,18 @@
             <th>Actualizar</th>
             <th>Comentarios</th>
             <th>Notificación</th>
-            <th id="thEliminar" class="col-eliminar">Eliminar</th>
+            <th class="col-eliminar">Eliminar</th>
           </tr>
         </thead>
         <tbody id="cuerpoTabla"></tbody>
       </table>
     </div>
 
-    <!-- Cards móvil -->
+    <!-- Tarjetas en móviles -->
     <div id="cuerpoCards"></div>
   </div>
 
-  <!-- Modal: Filtros -->
+  <!-- Modal: Filtros avanzados -->
   <div class="modal fade" id="filtersModal" tabindex="-1" role="dialog" aria-labelledby="filtersLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
       <div class="modal-content">
@@ -191,6 +169,7 @@
         </div>
 
         <div class="modal-body">
+
           <!-- Creación -->
           <div class="mb-3">
             <h6 class="mb-2"><span class="fa fa-calendar mr-2"></span>Fecha de creación</h6>
@@ -231,7 +210,7 @@
             </div>
           </div>
 
-          <!-- Número / Estatus -->
+          <!-- Número / Estatus por departamento -->
           <div class="form-row">
             <div class="col-md-4 mb-2">
               <label class="font-weight-bold mb-1">Número</label>
@@ -270,7 +249,7 @@
     </div>
   </div>
 
-  <!-- Modal Comentarios -->
+  <!-- Modal Comentarios (Bootstrap) -->
   <div class="modal fade" id="commentModal" tabindex="-1" role="dialog" aria-labelledby="commentModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
@@ -290,6 +269,8 @@
               <textarea id="nuevoComentario" class="form-control" placeholder="Escribe o edita tu comentario..." rows="4"></textarea>
             </div>
 
+        
+
             <div class="text-center mt-3">
               <button class="btn btn-success px-4 mr-2" id="guardarComentario">Guardar</button>
               <button class="btn btn-danger px-4 mr-2" id="eliminarComentario">Eliminar</button>
@@ -302,7 +283,7 @@
     </div>
   </div>
 
-  <!-- PDF -->
+  <!-- Libs PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
