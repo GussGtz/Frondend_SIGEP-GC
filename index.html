@@ -33,13 +33,32 @@
     #logoutBtn { float: right; margin-bottom: 10px; background-color: #dc3545; font-size: 0.95rem; }
 
     form { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-bottom: 25px; }
-    input[type="text"], input[type="date"], select { padding: 14px; border-radius: 0.6rem; border: 1px solid #ccc; min-width: 240px; font-size: 1rem; transition: border-color 0.3s ease, box-shadow 0.3s ease; }
+    input[type="text"], input[type="date"], select { padding: 10px 12px; border-radius: 0.6rem; border: 1px solid #ccc; min-width: 180px; font-size: 0.95rem; }
     input:focus, select:focus { border-color: #0d6efd; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.2); outline: none; }
-    button { padding: 12px 24px; background: linear-gradient(to right, #0d6efd, #20c997); color: white; border: none; border-radius: 0.6rem; font-weight: bold; font-size: 1rem; cursor: pointer; transition: all 0.2s ease-in-out; }
+    button { padding: 10px 18px; background: linear-gradient(to right, #0d6efd, #20c997); color: white; border: none; border-radius: 0.6rem; font-weight: bold; font-size: 0.95rem; cursor: pointer; transition: all 0.2s ease-in-out; }
     button:hover { transform: scale(1.05); box-shadow: 0 6px 18px rgba(0, 123, 255, 0.25); }
 
-    .filtro-container { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 25px; }
+    .filtro-container { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
     .filtro-botones { display: flex; gap: 12px; align-items: center; }
+
+    .filters-advanced {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+      background: #f8f9fa;
+      border: 1px solid #eaecee;
+      border-radius: 0.8rem;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .filters-advanced .group { display:flex; gap:8px; align-items:center; }
+    .filters-advanced label { font-weight:600; font-size:0.9rem; }
+
+    .pagination-bar {
+      display:flex; gap:10px; align-items:center; justify-content:flex-end; margin: 8px 0 14px;
+    }
+    .pagination-bar .page-btn { background:#f1f3f5; color:#333; }
+    .pagination-bar .page-info { font-size:0.9rem; color:#666; }
 
     .tabla-responsive { overflow-x: auto; border-radius: 0.9rem; }
     table { width: 100%; border-collapse: separate; border-spacing: 0; background-color: white; border-radius: 0.9rem; overflow: hidden; box-shadow: 0 0 15px rgba(0,0,0,0.05); font-size: 0.85rem; }
@@ -71,7 +90,7 @@
       <button id="logoutBtn"><i class="bi bi-box-arrow-right me-1"></i> Cerrar sesión</button>
     </div>
 
-    <div id="adminPanel" style="display: none; margin-top: 30px;">
+    <div id="adminPanel" style="display: none; margin-top: 20px;">
       <h3>Nuevo Pedido</h3>
       <form id="formNuevoPedido">
         <input type="text" id="numero_pedido" placeholder="Número de pedido" required>
@@ -84,7 +103,7 @@
 
     <div class="filtro-container">
       <div>
-        <label for="filtroCompletado">Filtrar pedidos:</label>
+        <label for="filtroCompletado" style="font-weight:600;">Filtrar pedidos:</label>
         <select id="filtroCompletado">
           <option value="todos">Todos</option>
           <option value="true">Completados</option>
@@ -93,6 +112,15 @@
       </div>
 
       <div class="filtro-botones">
+        <div class="group">
+          <input type="checkbox" id="chkPaginar">
+          <label for="chkPaginar" style="margin:0;">Paginar tabla</label>
+          <select id="pageSize" style="display:none;">
+            <option value="10" selected>10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+          </select>
+        </div>
         <button id="btnEliminarCompletados" style="display: none;">
           <i class="bi bi-trash-fill me-1"></i> Eliminar completados
         </button>
@@ -100,6 +128,60 @@
           <i class="bi bi-download me-1"></i> Descargar PDF
         </button>
       </div>
+    </div>
+
+    <!-- Filtros avanzados -->
+    <div class="filters-advanced">
+      <div class="group">
+        <label>Creación:</label>
+        <input type="date" id="fCreacionDesde" />
+        <span>→</span>
+        <input type="date" id="fCreacionHasta" />
+      </div>
+
+      <div class="group">
+        <label>Entrega:</label>
+        <input type="date" id="fEntregaDesde" />
+        <span>→</span>
+        <input type="date" id="fEntregaHasta" />
+      </div>
+
+      <div class="group">
+        <label>Número:</label>
+        <input type="text" id="fNumero" placeholder="GC-0001..." />
+      </div>
+
+      <div class="group">
+        <label>Departamento:</label>
+        <select id="fDepartamento">
+          <option value="todos" selected>Todos</option>
+          <option value="ventas">Ventas</option>
+          <option value="contabilidad">Contabilidad</option>
+          <option value="produccion">Producción</option>
+        </select>
+      </div>
+
+      <div class="group">
+        <label>Estatus:</label>
+        <select id="fEstatus">
+          <option value="todos" selected>Todos</option>
+          <option value="pendiente">Pendiente</option>
+          <option value="en proceso">En proceso</option>
+          <option value="completado">Completado</option>
+          <option value="sin estatus">Sin estatus</option>
+        </select>
+      </div>
+
+      <div class="group" style="justify-content:flex-end;">
+        <button id="btnLimpiarFiltros" type="button">Limpiar filtros</button>
+      </div>
+    </div>
+
+    <!-- Paginación -->
+    <div class="pagination-bar" id="paginationBar" style="display:none;">
+      <button class="page-btn" id="btnPrev">« Anterior</button>
+      <span class="page-info" id="pageInfo">Página 1 de 1</span>
+      <button class="page-btn" id="btnNext">Siguiente »</button>
     </div>
 
     <!-- Tabla en PC -->
@@ -110,7 +192,7 @@
             <th>ID</th>
             <th>Número</th>
             <th>Fecha de Creación</th>
-            <th> Fecha de Entrega</th>
+            <th>Fecha de Entrega</th>
             <th>Ventas</th>
             <th>Entregas</th>
             <th>Producción</th>
