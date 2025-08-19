@@ -68,13 +68,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const url = new URL(`${API_URL}/api/pedidos`);
     if (filtro !== 'todos') url.searchParams.append('completado', filtro);
 
-    const resPedidos = await fetch(url.toString(), {
-      credentials: 'include',
-    });
-    if (!resPedidos.ok) {
-      alert('Error al cargar pedidos');
-      return console.error(await resPedidos.text());
-    }
+    const resPedidos = await fetch(url.toString(), { credentials: 'include' });
+    if (!resPedidos.ok) return console.error(await resPedidos.text());
 
     const pedidos = await resPedidos.json();
     const cuerpoTabla = document.getElementById('cuerpoTabla');
@@ -97,42 +92,41 @@ document.addEventListener('DOMContentLoaded', async () => {
       const contabilidad = p.estatus?.contabilidad?.estado || 'Sin estatus';
       const produccion = p.estatus?.produccion?.estado || 'Sin estatus';
 
-     fila.innerHTML = `
-  <td>${p.id}</td>
-  <td>${p.numero_pedido}</td>
-  <td>${p.fecha_creacion}</td>
-  <td>${p.fecha_entrega}</td>
-  <td>${ventas}</td>
-  <td>${contabilidad}</td>
-  <td>${produccion}</td>
-  <td>
-    <select data-id="${p.id}" class="selectEstatus">
-      <option disabled selected>Actualizar estatus</option>
-      <option value="pendiente">Pendiente</option>
-      <option value="en proceso">En proceso</option>
-      <option value="completado">Completado</option>
-    </select>
-  </td>
-  <td>
-    <button class="btnComentario" data-id="${p.id}" data-area="${userDepartamento}" title="Ver/agregar comentario">
-      📝
-    </button>
-  </td>
-  <td class="col-ripple">
-    ${
-      p.comentarios && p.comentarios.length > 0
-      ? `
-        <a href="#" class="intro-banner-vdo-play-btn pinkBg" data-id="${p.id}" title="Tiene comentarios">
-          <i class="glyphicon glyphicon-play whiteText"></i>
-          <span class="ripple pinkBg"></span>
-          <span class="ripple pinkBg"></span>
-          <span class="ripple pinkBg"></span>
-        </a>
-      `
-      : ''
-    }
-  </td>
-`;
+      // ✅ Botón ripple si hay comentarios
+      const tieneComentarios = Array.isArray(p.comentarios) ? p.comentarios.length > 0
+                              : typeof p.comentarios === 'string' && p.comentarios.trim() !== '';
+
+      fila.innerHTML = `
+        <td>${p.id}</td>
+        <td>${p.numero_pedido}</td>
+        <td>${p.fecha_creacion}</td>
+        <td>${p.fecha_entrega}</td>
+        <td>${ventas}</td>
+        <td>${contabilidad}</td>
+        <td>${produccion}</td>
+        <td>
+          <select data-id="${p.id}" class="selectEstatus">
+            <option disabled selected>Actualizar estatus</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="en proceso">En proceso</option>
+            <option value="completado">Completado</option>
+          </select>
+        </td>
+        <td>
+          <button class="btnComentario" data-id="${p.id}" data-area="${userDepartamento}" title="Ver/agregar comentario">
+            📝
+          </button>
+        </td>
+        <td class="col-ripple">
+          ${tieneComentarios ? `
+            <a href="#" class="intro-banner-vdo-play-btn pinkBg" data-id="${p.id}" title="Tiene comentarios">
+              <i class="glyphicon glyphicon-play whiteText"></i>
+              <span class="ripple pinkBg"></span>
+              <span class="ripple pinkBg"></span>
+              <span class="ripple pinkBg"></span>
+            </a>` : ''}
+        </td>
+      `;
 
       if (esAdmin && filtro === 'true') {
         const td = document.createElement('td');
@@ -173,8 +167,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Comentarios
     document.querySelectorAll('.btnComentario').forEach(btn => {
       btn.addEventListener('click', async () => {
-        comentarioPedidoId = btn.dataset.id;
-        comentarioArea = btn.dataset.area;
+        const comentarioPedidoId = btn.dataset.id;
+        const comentarioArea = btn.dataset.area;
 
         const res = await fetch(`${API_URL}/api/pedidos/comentario/${comentarioPedidoId}`, {
           credentials: 'include',
