@@ -15,6 +15,9 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js"></script>
 
+  <!-- FontAwesome (iconos del modal de comentarios) -->
+  <script src="https://use.fontawesome.com/5ac93d4ca8.js"></script>
+
   <style>
     .pinkBg { background-color: #ed184f!important; background-image: linear-gradient(90deg, #fd5581, #fd8b55); }
     .intro-banner-vdo-play-btn { height: 40px; width: 40px; position: relative; display: inline-block; text-align: center; border-radius: 100px; z-index: 1; }
@@ -48,11 +51,11 @@
     .pagination-bar { display:flex; gap:10px; align-items:center; justify-content:flex-end; margin: 8px 0 14px; }
     .pagination-bar .page-btn { background:#f1f3f5; color:#333; }
 
-    /* ====== Advanced filters card ====== */
-    .filter-card .card-header h4{ margin-bottom: .25rem; }
-    .filter-card small{ color:#6c757d; }
+    /* Pills segmentadas (modal filtros) */
     .seg-pill { border:1px solid #CFD8DC; color:#6c757d; cursor:pointer; padding:.35rem .6rem; border-radius:.5rem; }
     .seg-pill.active { background:#304FFE; color:#fff; border-color:#304FFE; }
+
+    /* Modal Comentarios */
     .rating { display:inline-flex; flex-direction:row-reverse; }
     .rating>input{ display:none; }
     .rating>label{ position:relative; width:28px; font-size:30px; color:#ff0000; cursor:pointer; }
@@ -88,7 +91,7 @@
 
     <h3>Pedidos registrados</h3>
 
-    <!-- Filtro superior básico + paginación toggle -->
+    <!-- Barra superior: filtro rápido + paginación + acciones -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
       <div class="mb-2">
         <label for="filtroCompletado" class="font-weight-bold mb-0 mr-2">Filtrar pedidos:</label>
@@ -100,9 +103,12 @@
       </div>
 
       <div class="d-flex align-items-center mb-2">
+        <button id="btnOpenFilters" class="btn btn-outline-secondary btn-sm mr-3">
+          <i class="bi bi-funnel mr-1"></i> Filtros avanzados
+        </button>
         <div class="mr-3">
           <input type="checkbox" id="chkPaginar">
-          <label for="chkPaginar" class="mb-0">Paginar tabla</label>
+          <label for="chkPaginar" class="mb-0">Paginar</label>
           <select id="pageSize" style="display:none;">
             <option value="10" selected>10</option>
             <option value="25">25</option>
@@ -118,97 +124,11 @@
       </div>
     </div>
 
-    <!-- Advanced Filters Card -->
-    <div class="container-fluid px-1 px-sm-2 mx-auto mb-3 filter-card">
-      <div class="row d-flex justify-content-center">
-        <div class="col-12">
-          <div class="card border-0">
-            <div class="card-header bg-white">
-              <h4 class="mb-1">Búsqueda y filtros avanzados</h4>
-              <small class="text-muted">Combina criterios para encontrar pedidos rápido.</small>
-            </div>
-
-            <div class="card-body px-3 px-md-4">
-              <!-- Creación -->
-              <h6 class="mb-2"><span class="fa fa-calendar mr-2"></span>Fecha de creación</h6>
-              <div class="d-flex flex-wrap mb-2">
-                <div class="seg-pill mr-2 mb-2" data-mode="any" data-group="creacion">Cualquiera</div>
-                <div class="seg-pill mr-2 mb-2 active" data-mode="specific" data-group="creacion">Específica</div>
-                <div class="seg-pill mr-2 mb-2" data-mode="after" data-group="creacion">Después de</div>
-                <div class="seg-pill mr-2 mb-2" data-mode="before" data-group="creacion">Antes de</div>
-                <div class="seg-pill mr-2 mb-2" data-mode="between" data-group="creacion">Entre</div>
-              </div>
-              <div class="form-row mb-3">
-                <div class="col-md-6 mb-2">
-                  <input type="date" id="fCreacionDesde" />
-                </div>
-                <div class="col-md-6 mb-2">
-                  <input type="date" id="fCreacionHasta" />
-                </div>
-              </div>
-
-              <!-- Entrega -->
-              <h6 class="mb-2"><span class="fa fa-calendar mr-2"></span>Fecha de entrega</h6>
-              <div class="d-flex flex-wrap mb-2">
-                <div class="seg-pill mr-2 mb-2" data-mode="any" data-group="entrega">Cualquiera</div>
-                <div class="seg-pill mr-2 mb-2 active" data-mode="specific" data-group="entrega">Específica</div>
-                <div class="seg-pill mr-2 mb-2" data-mode="after" data-group="entrega">Después de</div>
-                <div class="seg-pill mr-2 mb-2" data-mode="before" data-group="entrega">Antes de</div>
-                <div class="seg-pill mr-2 mb-2" data-mode="between" data-group="entrega">Entre</div>
-              </div>
-              <div class="form-row mb-3">
-                <div class="col-md-6 mb-2">
-                  <input type="date" id="fEntregaDesde" />
-                </div>
-                <div class="col-md-6 mb-2">
-                  <input type="date" id="fEntregaHasta" />
-                </div>
-              </div>
-
-              <!-- Número / Estatus por departamento -->
-              <div class="form-row">
-                <div class="col-md-4 mb-2">
-                  <label class="font-weight-bold mb-1">Número</label>
-                  <input type="text" id="fNumero" placeholder="GC-0001..." />
-                </div>
-                <div class="col-md-4 mb-2">
-                  <label class="font-weight-bold mb-1">Departamento</label>
-                  <select id="fDepartamento">
-                    <option value="todos" selected>Todos</option>
-                    <option value="ventas">Ventas</option>
-                    <option value="contabilidad">Contabilidad</option>
-                    <option value="produccion">Producción</option>
-                  </select>
-                </div>
-                <div class="col-md-4 mb-2">
-                  <label class="font-weight-bold mb-1">Estatus (del depto)</label>
-                  <select id="fEstatus">
-                    <option value="todos" selected>Todos</option>
-                    <option value="pendiente">Pendiente</option>
-                    <option value="en proceso">En proceso</option>
-                    <option value="completado">Completado</option>
-                    <option value="sin estatus">Sin estatus</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="d-flex justify-content-end mt-3">
-                <button id="btnLimpiarFiltros" type="button" class="btn btn-light mr-2">Limpiar filtros</button>
-              </div>
-            </div>
-
-            <div class="card-footer bg-white d-flex justify-content-between">
-              <span class="text-muted">Usa los segmentos para variar el tipo de filtro.</span>
-              <div class="pagination-bar" id="paginationBar" style="display:none;">
-                <button class="page-btn btn btn-light btn-sm" id="btnPrev">« Anterior</button>
-                <span class="page-info mx-2" id="pageInfo">Página 1 de 1</span>
-                <button class="page-btn btn btn-light btn-sm" id="btnNext">Siguiente »</button>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
+    <!-- Paginación (se muestra solo si se activa) -->
+    <div class="pagination-bar" id="paginationBar" style="display:none;">
+      <button class="page-btn btn btn-light btn-sm" id="btnPrev">« Anterior</button>
+      <span class="page-info mx-2" id="pageInfo">Página 1 de 1</span>
+      <button class="page-btn btn btn-light btn-sm" id="btnNext">Siguiente »</button>
     </div>
 
     <!-- Tabla en PC -->
@@ -218,10 +138,10 @@
           <tr>
             <th>ID</th>
             <th>Número</th>
-            <th>Fecha de Creación</th>
-            <th>Fecha de Entrega</th>
+            <th>Creación</th>
+            <th>Entrega</th>
             <th>Ventas</th>
-            <th>Entregas</th>
+            <th>Contabilidad</th>
             <th>Producción</th>
             <th>Actualizar</th>
             <th>Comentarios</th>
@@ -237,12 +157,104 @@
     <div id="cuerpoCards"></div>
   </div>
 
+  <!-- Modal: Filtros avanzados -->
+  <div class="modal fade" id="filtersModal" tabindex="-1" role="dialog" aria-labelledby="filtersLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 id="filtersLabel" class="modal-title">Búsqueda y filtros avanzados</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+
+        <div class="modal-body">
+
+          <!-- Creación -->
+          <div class="mb-3">
+            <h6 class="mb-2"><span class="fa fa-calendar mr-2"></span>Fecha de creación</h6>
+            <div class="d-flex flex-wrap mb-2">
+              <div class="seg-pill mr-2 mb-2" data-mode="any" data-group="creacion">Cualquiera</div>
+              <div class="seg-pill mr-2 mb-2 active" data-mode="specific" data-group="creacion">Específica</div>
+              <div class="seg-pill mr-2 mb-2" data-mode="after" data-group="creacion">Después de</div>
+              <div class="seg-pill mr-2 mb-2" data-mode="before" data-group="creacion">Antes de</div>
+              <div class="seg-pill mr-2 mb-2" data-mode="between" data-group="creacion">Entre</div>
+            </div>
+            <div class="form-row">
+              <div class="col-md-6 mb-2">
+                <input type="date" id="fCreacionDesde" />
+              </div>
+              <div class="col-md-6 mb-2" id="wrapCreacionHasta">
+                <input type="date" id="fCreacionHasta" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Entrega -->
+          <div class="mb-3">
+            <h6 class="mb-2"><span class="fa fa-calendar mr-2"></span>Fecha de entrega</h6>
+            <div class="d-flex flex-wrap mb-2">
+              <div class="seg-pill mr-2 mb-2" data-mode="any" data-group="entrega">Cualquiera</div>
+              <div class="seg-pill mr-2 mb-2 active" data-mode="specific" data-group="entrega">Específica</div>
+              <div class="seg-pill mr-2 mb-2" data-mode="after" data-group="entrega">Después de</div>
+              <div class="seg-pill mr-2 mb-2" data-mode="before" data-group="entrega">Antes de</div>
+              <div class="seg-pill mr-2 mb-2" data-mode="between" data-group="entrega">Entre</div>
+            </div>
+            <div class="form-row">
+              <div class="col-md-6 mb-2">
+                <input type="date" id="fEntregaDesde" />
+              </div>
+              <div class="col-md-6 mb-2" id="wrapEntregaHasta">
+                <input type="date" id="fEntregaHasta" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Número / Estatus por departamento -->
+          <div class="form-row">
+            <div class="col-md-4 mb-2">
+              <label class="font-weight-bold mb-1">Número</label>
+              <input type="text" id="fNumero" placeholder="GC-0001..." />
+            </div>
+            <div class="col-md-4 mb-2">
+              <label class="font-weight-bold mb-1">Departamento</label>
+              <select id="fDepartamento">
+                <option value="todos" selected>Todos</option>
+                <option value="ventas">Ventas</option>
+                <option value="contabilidad">Contabilidad</option>
+                <option value="produccion">Producción</option>
+              </select>
+            </div>
+            <div class="col-md-4 mb-2">
+              <label class="font-weight-bold mb-1">Estatus (del depto)</label>
+              <select id="fEstatus">
+                <option value="todos" selected>Todos</option>
+                <option value="pendiente">Pendiente</option>
+                <option value="en proceso">En proceso</option>
+                <option value="completado">Completado</option>
+                <option value="sin estatus">Sin estatus</option>
+              </select>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button id="btnLimpiarFiltros" type="button" class="btn btn-light">Limpiar filtros</button>
+          <button id="btnAplicarFiltros" type="button" class="btn btn-success" data-dismiss="modal">
+            <i class="bi bi-filter"></i> Aplicar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal Comentarios (Bootstrap) -->
   <div class="modal fade" id="commentModal" tabindex="-1" role="dialog" aria-labelledby="commentModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
-        <div class="text-right cross p-2">
-          <i class="fa fa-times mr-2" data-dismiss="modal"></i>
+        <div class="text-right p-2">
+          <i class="fa fa-times mr-2" data-dismiss="modal" style="cursor:pointer;"></i>
         </div>
         <div class="card-body text-center">
           <img src="https://i.imgur.com/d2dKtI7.png" height="80" width="80" alt="Comment">
@@ -257,19 +269,10 @@
               <textarea id="nuevoComentario" class="form-control" placeholder="Escribe o edita tu comentario..." rows="4"></textarea>
             </div>
 
-            <!-- Decorativo: rating (no se envía al backend) -->
-            <div class="text-center mb-3">
-              <div class="rating">
-                <input type="radio" name="rating" value="5" id="r5"><label for="r5">☆</label>
-                <input type="radio" name="rating" value="4" id="r4"><label for="r4">☆</label>
-                <input type="radio" name="rating" value="3" id="r3"><label for="r3">☆</label>
-                <input type="radio" name="rating" value="2" id="r2"><label for="r2">☆</label>
-                <input type="radio" name="rating" value="1" id="r1"><label for="r1">☆</label>
-              </div>
-            </div>
+        
 
             <div class="text-center mt-3">
-              <button class="btn btn-success send px-4 mr-2" id="guardarComentario">Guardar</button>
+              <button class="btn btn-success px-4 mr-2" id="guardarComentario">Guardar</button>
               <button class="btn btn-danger px-4 mr-2" id="eliminarComentario">Eliminar</button>
               <button class="btn btn-secondary px-4" data-dismiss="modal" id="cerrarComentario">Cerrar</button>
             </div>
@@ -286,8 +289,5 @@
 
   <!-- App -->
   <script type="module" src="./js/index.js"></script>
-
-  <!-- FontAwesome for modal icons (optional) -->
-  <script src="https://use.fontawesome.com/5ac93d4ca8.js"></script>
 </body>
 </html>

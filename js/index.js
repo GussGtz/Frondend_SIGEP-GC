@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const userDepartamento = (userData?.departamento || '').toLowerCase();
   const esAdmin = userData?.role_id === 1;
 
-  // Estado global
+  // ===== Estado global =====
   let comentarioPedidoId = null;
   let comentarioArea = null;
   let rawPedidos = [];
@@ -17,11 +17,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   let pageSize = 10;
   let currentPage = 1;
 
-  // ======= Helpers =======
+  // ===== Helpers =====
   const onlyDate = (s) => (String(s || '').split(' ')[0] || '').trim();
   const norm = (s) => String(s || '').toLowerCase();
 
-  // ======= Panel admin =======
+  // ===== Panel admin =====
   if (esAdmin) {
     document.getElementById('adminPanel').style.display = 'block';
 
@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
 
-    // Eliminar completados
+    // Eliminar completados (bulk)
     document.getElementById('btnEliminarCompletados').addEventListener('click', async () => {
       const confirmacion = await Swal.fire({
         title: '¿Eliminar pedidos completados?',
@@ -77,51 +77,102 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // ======= Elementos =======
+  // ===== Elementos =====
   const els = {
     filtroCompletado: document.getElementById('filtroCompletado'),
-    // date groups (seg pills):
-    segPills: document.querySelectorAll('.seg-pill'),
-    // date inputs:
+    // modal filtros
+    btnOpenFilters: document.getElementById('btnOpenFilters'),
+    filtersModal: document.getElementById('filtersModal'),
+    segPills: () => document.querySelectorAll('#filtersModal .seg-pill'),
     fCreacionDesde: document.getElementById('fCreacionDesde'),
     fCreacionHasta: document.getElementById('fCreacionHasta'),
+    wrapCreacionHasta: document.getElementById('wrapCreacionHasta'),
     fEntregaDesde: document.getElementById('fEntregaDesde'),
     fEntregaHasta: document.getElementById('fEntregaHasta'),
-    // simple filters:
+    wrapEntregaHasta: document.getElementById('wrapEntregaHasta'),
     fNumero: document.getElementById('fNumero'),
     fDepartamento: document.getElementById('fDepartamento'),
     fEstatus: document.getElementById('fEstatus'),
-    // actions:
     btnLimpiarFiltros: document.getElementById('btnLimpiarFiltros'),
-    // pagination
+    btnAplicarFiltros: document.getElementById('btnAplicarFiltros'),
+    // paginación
     chkPaginar: document.getElementById('chkPaginar'),
     pageSize: document.getElementById('pageSize'),
     paginationBar: document.getElementById('paginationBar'),
     btnPrev: document.getElementById('btnPrev'),
     btnNext: document.getElementById('btnNext'),
     pageInfo: document.getElementById('pageInfo'),
-    // admin btn
+    // admin
     btnEliminarCompletados: document.getElementById('btnEliminarCompletados'),
   };
 
-  // Estado de modo de fechas
+  // ===== Estado de modo de fechas (y visibilidad de inputs) =====
   const dateMode = { creacion: 'specific', entrega: 'specific' };
 
-  // Manejador de “segment pills”
-  els.segPills.forEach(pill => {
-    pill.addEventListener('click', () => {
-      const group = pill.dataset.group;   // 'creacion' | 'entrega'
-      const mode = pill.dataset.mode;     // 'any'|'specific'|'after'|'before'|'between'
-      // limpiar activos del grupo
-      document.querySelectorAll(`.seg-pill[data-group="${group}"]`).forEach(x => x.classList.remove('active'));
-      pill.classList.add('active');
-      dateMode[group] = mode;
-      currentPage = 1;
-      render();
-    });
+  function updateDateInputsVisibility() {
+    // CREACIÓN
+    if (dateMode.creacion === 'specific' || dateMode.creacion === 'after') {
+      els.fCreacionDesde.parentElement.style.display = '';
+      els.wrapCreacionHasta.style.display = 'none';
+      if (dateMode.creacion === 'specific' && els.fCreacionHasta.value) els.fCreacionDesde.value = els.fCreacionHasta.value;
+      els.fCreacionHasta.value = '';
+    } else if (dateMode.creacion === 'before') {
+      els.fCreacionDesde.parentElement.style.display = 'none';
+      els.wrapCreacionHasta.style.display = '';
+      els.fCreacionDesde.value = '';
+    } else if (dateMode.creacion === 'between') {
+      els.fCreacionDesde.parentElement.style.display = '';
+      els.wrapCreacionHasta.style.display = '';
+    } else { // any
+      els.fCreacionDesde.parentElement.style.display = 'none';
+      els.wrapCreacionHasta.style.display = 'none';
+      els.fCreacionDesde.value = '';
+      els.fCreacionHasta.value = '';
+    }
+
+    // ENTREGA
+    if (dateMode.entrega === 'specific' || dateMode.entrega === 'after') {
+      els.fEntregaDesde.parentElement.style.display = '';
+      els.wrapEntregaHasta.style.display = 'none';
+      if (dateMode.entrega === 'specific' && els.fEntregaHasta.value) els.fEntregaDesde.value = els.fEntregaHasta.value;
+      els.fEntregaHasta.value = '';
+    } else if (dateMode.entrega === 'before') {
+      els.fEntregaDesde.parentElement.style.display = 'none';
+      els.wrapEntregaHasta.style.display = '';
+      els.fEntregaDesde.value = '';
+    } else if (dateMode.entrega === 'between') {
+      els.fEntregaDesde.parentElement.style.display = '';
+      els.wrapEntregaHasta.style.display = '';
+    } else { // any
+      els.fEntregaDesde.parentElement.style.display = 'none';
+      els.wrapEntregaHasta.style.display = 'none';
+      els.fEntregaDesde.value = '';
+      els.fEntregaHasta.value = '';
+    }
+  }
+
+  // Abrir modal filtros
+  document.getElementById('btnOpenFilters').addEventListener('click', () => {
+    $('#filtersModal').modal('show');
+    updateDateInputsVisibility();
   });
 
-  // ======= Filtros =======
+  // Pills dentro del modal
+  const attachPillHandlers = () => {
+    els.segPills().forEach(pill => {
+      pill.addEventListener('click', () => {
+        const group = pill.dataset.group;   // 'creacion' | 'entrega'
+        const mode = pill.dataset.mode;     // 'any'|'specific'|'after'|'before'|'between'
+        document.querySelectorAll(`#filtersModal .seg-pill[data-group="${group}"]`).forEach(x => x.classList.remove('active'));
+        pill.classList.add('active');
+        dateMode[group] = mode;
+        updateDateInputsVisibility();
+      });
+    });
+  };
+  attachPillHandlers();
+
+  // Leer filtros actuales
   const getFilters = () => ({
     completado: els.filtroCompletado.value,
     creacionDesde: els.fCreacionDesde.value || null,
@@ -133,6 +184,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     estatus: els.fEstatus.value,
   });
 
+  // Limpiar filtros
   const clearFilters = () => {
     els.fCreacionDesde.value = '';
     els.fCreacionHasta.value = '';
@@ -141,27 +193,37 @@ document.addEventListener('DOMContentLoaded', async () => {
     els.fNumero.value = '';
     els.fDepartamento.value = 'todos';
     els.fEstatus.value = 'todos';
-    // reset pills to 'specific'
-    document.querySelectorAll('.seg-pill[data-group="creacion"]').forEach(x => x.classList.remove('active'));
-    document.querySelector('.seg-pill[data-group="creacion"][data-mode="specific"]').classList.add('active');
-    document.querySelectorAll('.seg-pill[data-group="entrega"]').forEach(x => x.classList.remove('active'));
-    document.querySelector('.seg-pill[data-group="entrega"][data-mode="specific"]').classList.add('active');
+
+    // reset pills
+    document.querySelectorAll('#filtersModal .seg-pill[data-group="creacion"]').forEach(x => x.classList.remove('active'));
+    document.querySelector('#filtersModal .seg-pill[data-group="creacion"][data-mode="specific"]').classList.add('active');
+    document.querySelectorAll('#filtersModal .seg-pill[data-group="entrega"]').forEach(x => x.classList.remove('active'));
+    document.querySelector('#filtersModal .seg-pill[data-group="entrega"][data-mode="specific"]').classList.add('active');
     dateMode.creacion = 'specific';
     dateMode.entrega = 'specific';
+    updateDateInputsVisibility();
+
     currentPage = 1;
     render();
   };
 
-  // ======= Filtrado client-side =======
+  // Aplicar filtros (cierra modal)
+  els.btnAplicarFiltros.addEventListener('click', () => {
+    currentPage = 1;
+    render();
+  });
+
+  els.btnLimpiarFiltros.addEventListener('click', clearFilters);
+
+  // ===== Filtrado client-side =====
   const matchDateByMode = (valueYMD, mode, d1, d2) => {
     if (!valueYMD) return false;
-    // valueYMD es 'YYYY-MM-DD' (creación ya la normalizamos)
-    const v = valueYMD;
+    const v = valueYMD; // 'YYYY-MM-DD'
     switch (mode) {
       case 'any': return true;
       case 'specific': return d1 ? v === d1 : true;
       case 'after': return d1 ? v > d1 : true;
-      case 'before': return d1 ? v < d1 : true;
+      case 'before': return d2 ? v < d2 : true; // usamos d2 como "hasta" en modo "before"
       case 'between': {
         if (!d1 && !d2) return true;
         if (d1 && !d2) return v >= d1;
@@ -185,7 +247,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (est === 'todos') return true;
       return val === est;
     }
-
     if (est === 'todos') return true;
     return Object.values(estAreas).some(v => v === est);
   };
@@ -194,27 +255,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     const f = getFilters();
     let out = [...list];
 
-    // Fecha de creación (usar solo fecha)
+    // Creación: solo fecha (YYYY-MM-DD)
     out = out.filter(p => matchDateByMode(
       onlyDate(p.fecha_creacion),
       dateMode.creacion,
-      f.creacionDesde,
-      f.creacionHasta
+      f.creacionDesde,   // d1
+      f.creacionHasta    // d2
     ));
 
-    // Fecha de entrega (YYYY-MM-DD ya viene limpio)
+    // Entrega
     out = out.filter(p => matchDateByMode(
       p.fecha_entrega,
       dateMode.entrega,
-      f.entregaDesde,
-      f.entregaHasta
+      f.entregaDesde,    // d1
+      f.entregaHasta     // d2
     ));
 
     if (f.numero) {
       out = out.filter(p => norm(p.numero_pedido).includes(f.numero));
     }
 
-    // Estatus por departamento (tal cual pediste: filtra el estatus de los departamentos)
+    // Estatus por departamento
     if (f.departamento !== 'todos' || f.estatus !== 'todos') {
       out = out.filter(p => pedidoTieneEstatus(p, f.departamento, f.estatus));
     }
@@ -222,12 +283,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     return out;
   };
 
-  // ======= Render =======
+  // ===== Render =====
   function render() {
     const cuerpoTabla = document.getElementById('cuerpoTabla');
     cuerpoTabla.innerHTML = '';
 
-    // Mostrar botón "Eliminar completados" solo a admin
+    // Botón bulk delete visible solo admin
     els.btnEliminarCompletados.style.display = esAdmin ? 'inline-block' : 'none';
 
     let working = filterPedidos(rawPedidos);
@@ -251,7 +312,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       els.paginationBar.style.display = 'none';
     }
 
-    // Render filas
+    // Filas
     working.forEach(p => {
       const fila = document.createElement('tr');
       const ventas = p.estatus?.ventas?.estado || 'Sin estatus';
@@ -298,11 +359,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         </td>
       `;
 
-      cuerpoTabla.appendChild(fila);
+      document.getElementById('cuerpoTabla').appendChild(fila);
     });
   }
 
-  // ======= Cargar pedidos =======
+  // ===== Cargar pedidos =====
   async function cargarPedidos(filtro = 'todos') {
     const url = new URL(`${API_URL}/api/pedidos`);
     if (filtro !== 'todos') url.searchParams.append('completado', filtro);
@@ -319,7 +380,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     render();
   }
 
-  // ======= Delegación de eventos en tabla =======
+  // ===== Delegación de eventos en tabla =====
   const cuerpoTabla = document.getElementById('cuerpoTabla');
 
   // Cambiar estatus
@@ -380,7 +441,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    // Eliminar pedido (SIEMPRE visible para admin)
+    // Eliminar pedido (admin)
     const btnEliminar = e.target.closest('.btnEliminar');
     if (btnEliminar) {
       const pedidoId = btnEliminar.dataset.id;
@@ -398,32 +459,33 @@ document.addEventListener('DOMContentLoaded', async () => {
           method: 'DELETE',
           credentials: 'include',
         });
-        const data = await res.json().catch(() => ({}));
-        Swal.fire(res.ok ? 'Eliminado' : 'Error', data.message || '', res.ok ? 'success' : 'error');
-        if (res.ok) await cargarPedidos(els.filtroCompletado.value);
+        let payload = {};
+        try { payload = await res.json(); } catch {}
+        if (res.ok) {
+          Swal.fire('Eliminado', payload.message || 'Pedido eliminado correctamente', 'success');
+          await cargarPedidos(els.filtroCompletado.value);
+        } else {
+          Swal.fire('Error', payload.message || 'No se pudo eliminar', 'error');
+        }
       }
     }
   });
 
-  // ======= Eventos de filtros / paginación =======
+  // ===== Filtro rápido completado =====
   els.filtroCompletado.addEventListener('change', async (e) => {
     await cargarPedidos(e.target.value);
   });
 
-  ['fCreacionDesde','fCreacionHasta','fEntregaDesde','fEntregaHasta','fNumero','fDepartamento','fEstatus']
-    .forEach(id => els[id].addEventListener('input', () => { currentPage = 1; render(); }));
-
-  els.btnLimpiarFiltros.addEventListener('click', clearFilters);
-
-  els.chkPaginar.addEventListener('change', () => {
-    paginationEnabled = els.chkPaginar.checked;
+  // ===== Paginación =====
+  document.getElementById('chkPaginar').addEventListener('change', () => {
+    paginationEnabled = document.getElementById('chkPaginar').checked;
     document.getElementById('pageSize').style.display = paginationEnabled ? 'inline-block' : 'none';
     currentPage = 1;
     render();
   });
 
-  els.pageSize.addEventListener('change', () => {
-    pageSize = parseInt(els.pageSize.value, 10) || 10;
+  document.getElementById('pageSize').addEventListener('change', () => {
+    pageSize = parseInt(document.getElementById('pageSize').value, 10) || 10;
     currentPage = 1;
     render();
   });
@@ -436,7 +498,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     currentPage++; render();
   });
 
-  // ======= PDF =======
+  // ===== PDF =====
   document.getElementById('btnExportarPDF').addEventListener('click', () => {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -472,10 +534,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     doc.save(`Listado_Pedidos_GlassCaribe_${fecha.toLocaleDateString('es-MX')}.pdf`);
   });
 
-  // ======= Logout =======
+  // ===== Logout =====
   document.getElementById('logoutBtn').addEventListener('click', logoutAndRedirect);
 
-  // ======= Modal Comentarios: guardar / eliminar / cerrar =======
+  // ===== Modal Comentarios: guardar / eliminar / cerrar =====
   document.getElementById('guardarComentario').addEventListener('click', async () => {
     if (!comentarioPedidoId || !comentarioArea) {
       Swal.fire('Error', 'Abre el comentario desde el botón 📝 primero.', 'error');
@@ -490,8 +552,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       body: JSON.stringify({ comentario })
     });
 
-    const data = await res.json().catch(() => ({}));
-    Swal.fire('Comentario', data.message || (res.ok ? 'Actualizado' : 'Error'), res.ok ? 'success' : 'error');
+    let payload = {};
+    try { payload = await res.json(); } catch {}
+    Swal.fire('Comentario', payload.message || (res.ok ? 'Actualizado' : 'Error'), res.ok ? 'success' : 'error');
     if (res.ok) {
       $('#commentModal').modal('hide');
       await cargarPedidos(document.getElementById('filtroCompletado').value);
@@ -509,8 +572,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       credentials: 'include',
     });
 
-    const data = await res.json().catch(() => ({}));
-    Swal.fire('Comentario', data.message || (res.ok ? 'Eliminado' : 'Error'), res.ok ? 'success' : 'error');
+    let payload = {};
+    try { payload = await res.json(); } catch {}
+    Swal.fire('Comentario', payload.message || (res.ok ? 'Eliminado' : 'Error'), res.ok ? 'success' : 'error');
     if (res.ok) {
       $('#commentModal').modal('hide');
       await cargarPedidos(document.getElementById('filtroCompletado').value);
@@ -521,6 +585,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     $('#commentModal').modal('hide');
   });
 
-  // ======= Primera carga =======
+  // ===== Filtro rápido (completado) =====
+  document.getElementById('filtroCompletado').addEventListener('change', async (e) => {
+    await cargarPedidos(e.target.value);
+  });
+
+  // ===== Primera carga =====
   await cargarPedidos();
 });
