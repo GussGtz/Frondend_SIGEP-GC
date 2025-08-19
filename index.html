@@ -137,26 +137,27 @@
       border-radius: 0.9rem;
       overflow: hidden;
       box-shadow: 0 0 15px rgba(0,0,0,0.05);
-      font-size: 1rem;
+      font-size: 0.85rem; /* más pequeño */
     }
 
     th, td {
-      padding: 16px 20px;
-      text-align: left;
+      padding: 10px 14px; /* más compacto */
+      text-align: center;
       border-bottom: 1px solid #eee;
       vertical-align: middle;
+      white-space: nowrap; /* ✅ en una sola línea */
     }
 
     th {
       background-color: #f8f9fa;
       color: #222;
       font-weight: 700;
-      font-size: 1.05rem;
-      text-align: center;
+      font-size: 0.9rem; /* encabezados más pequeños */
     }
 
     td {
       color: #444;
+      font-size: 0.85rem;
     }
 
     tr:hover {
