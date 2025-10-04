@@ -2,80 +2,143 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Login | SIGEP-GC</title>
   <link rel="icon" href="./assets/logoglassico.ico" type="image/png" />
 
-  <!-- Google Font -->
+  <!-- Fuente moderna -->
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet" />
 
   <!-- SweetAlert2 -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  <!-- Estilo personalizado -->
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
+
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
       padding: 0;
       font-family: 'Plus Jakarta Sans', sans-serif;
-      background: linear-gradient(to right, #0d6efd, #20c997);
       height: 100vh;
+      background: url('https://www.cristel.com.mx/blog/wp-content/uploads/2022/07/cristel-morpheus-edificio-cristal.jpeg') no-repeat center center/cover;
       display: flex;
+      align-items: center;
       justify-content: center;
+      color: white;
+      overflow: hidden;
+    }
+
+    .overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.45);
+      z-index: 1;
+    }
+
+    .login-container {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      max-width: 950px;
+      width: 90%;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 1rem;
+      overflow: hidden;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    /* --- SECCIÓN IZQUIERDA --- */
+    .left-section {
+      flex: 1;
+      padding: 60px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .left-section h1 {
+      font-size: 3rem;
+      font-weight: 800;
+      margin-bottom: 10px;
+      color: #fff;
+    }
+
+    .left-section p {
+      max-width: 350px;
+      font-size: 1rem;
+      line-height: 1.5;
+      color: #ddd;
+      margin-bottom: 40px;
+    }
+
+    /* Redes sociales */
+    .social-icons {
+      display: flex;
+      gap: 20px;
       align-items: center;
     }
 
-    .form-container {
-      background-color: white;
-      padding: 40px 30px;
-      border-radius: 1rem;
-      box-shadow: 0 0 30px rgba(0, 0, 0, 0.15);
-      width: 100%;
-      max-width: 400px;
-      animation: fadeIn 0.8s ease;
-    }
-
-    .logo-container {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    .logo {
-      width: 120px;
-      filter: drop-shadow(0 0 6px rgba(0,0,0,0.15));
-    }
-
-    .sistema-nombre {
-      margin: 10px 0 5px;
+    .social-icons a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      color: #fff;
       font-size: 1.8rem;
-      font-weight: 800;
-      color: #0d6efd;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
 
-    .sistema-descripcion {
-      font-size: 0.9rem;
-      color: #555;
-    }
-
-    h2 {
-      text-align: center;
+ 
+    /* --- SECCIÓN DERECHA --- */
+    .right-section {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.97);
+      padding: 50px 50px;
       color: #222;
-      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+    }
+
+    .login-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 25px;
+    }
+
+    .login-header h2 {
+      font-weight: 800;
+      font-size: 1.6rem;
+      color: #0c0c0c;
+      margin: 0;
+    }
+
+    .login-header img {
+      width: 95px;
+      height: auto;
+      opacity: 0.95;
+      margin-right: 10px;
     }
 
     form {
       display: flex;
       flex-direction: column;
-      gap: 15px;
+      gap: 18px;
     }
 
     input[type="email"],
     input[type="password"] {
       padding: 12px;
-      border-radius: 0.6rem;
+      border-radius: 0.5rem;
       border: 1px solid #ccc;
       font-size: 1rem;
       transition: 0.3s ease;
@@ -87,6 +150,15 @@
       outline: none;
     }
 
+    label { font-weight: 600; font-size: 0.9rem; }
+
+    .remember-me {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.9rem;
+    }
+
     button {
       padding: 12px;
       background: linear-gradient(to right, #0d6efd, #20c997);
@@ -96,74 +168,123 @@
       font-weight: 600;
       font-size: 1rem;
       cursor: pointer;
-      transition: 0.2s ease;
+      transition: all 0.3s ease;
     }
 
     button:hover {
       transform: scale(1.03);
-      box-shadow: 0 5px 15px rgba(0, 123, 255, 0.2);
+      box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
     }
 
-    form p {
+    a { text-decoration: none; color: #0d6efd; font-weight: 600; }
+
+    .footer-links {
+      font-size: 0.8rem;
       text-align: center;
-      font-size: 0.9rem;
+      margin-top: 15px;
+      color: #666;
     }
 
-    form a {
-      color: #0d6efd;
-      text-decoration: none;
-      font-weight: 600;
-    }
+    .footer-links a { color: #0d6efd; }
 
-    #mensaje {
-      text-align: center;
-      color: red;
-      margin-top: 10px;
-      font-size: 0.9rem;
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(-15px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @media (max-width: 480px) {
-      .form-container {
-        padding: 30px 20px;
-      }
-
-      .sistema-nombre {
-        font-size: 1.5rem;
-      }
+    @media (max-width: 850px) {
+      .login-container { flex-direction: column; width: 95%; }
+      .left-section { text-align: center; padding: 40px 20px; }
+      .social-icons { justify-content: center; }
+      .right-section { padding: 40px 25px; }
+      .login-header img { width: 75px; }
     }
   </style>
 </head>
+
 <body>
-  <div class="form-container">
-    <div class="logo-container">
-      <img src="./assets/logoglass.png" alt="Logo Glass Caribe" class="logo" />
-      <h1 class="sistema-nombre">SIGEP-GC</h1>
-      <p class="sistema-descripcion">Sistema de Gestión de Pedidos - Glass Caribe</p>
+  <div class="overlay"></div>
+
+  <div class="login-container">
+    <!-- Sección izquierda -->
+    <div class="left-section">
+      <h1>Bienvenido.</h1>
+      <p>Inicia sesión para gestionar de forma eficiente y segura.</p>
+      <div class="social-icons">
+        <a href="https://www.facebook.com/GlassCaribe/" target="_blank" class="facebook"><i class="bi bi-facebook"></i></a>
+        <a href="https://www.instagram.com/glasscaribe/" target="_blank" class="instagram"><i class="bi bi-instagram"></i></a>
+      </div>
     </div>
 
-    <h2>Iniciar sesión</h2>
+    <!-- Sección derecha -->
+    <div class="right-section">
+      <div class="login-header">
+        <h2>Iniciar sesión</h2>
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSvrLWOYGjWf5N6JQRJwvfBmh8lIM1f-QY_ew&s" alt="Logo Glass Caribe" />
+      </div>
 
-    <form id="loginForm">
-      <input type="email" id="email" placeholder="Correo electrónico" required />
-      <input type="password" id="password" placeholder="Contraseña" required />
-      <button type="submit">Entrar</button>
-      <p>¿No tienes cuenta? <a href="register.html">Regístrate</a></p>
-    </form>
+      <form id="loginForm">
+        <label for="email">Correo electrónico</label>
+        <input type="email" id="email" placeholder="ejemplo@correo.com" required />
 
-    <div id="mensaje"></div>
+        <label for="password">Contraseña</label>
+        <input type="password" id="password" placeholder="********" required />
+
+        <div class="remember-me">
+          <input type="checkbox" id="remember" />
+          <label for="remember">Recordarme</label>
+        </div>
+
+        <button type="submit">Entrar ahora</button>
+
+        <p class="text-center mt-3">
+          <a href="reset-password.html">¿Olvidaste tu contraseña?</a>
+        </p>
+        <p class="text-center mt-1">
+          ¿No tienes cuenta? <a href="register.html">Crea una nueva</a>
+        </p>
+      </form>
+
+      <div class="footer-links">
+        Al hacer clic en "Entrar ahora" aceptas los <a href="#">Términos de servicio</a> y la <a href="#">Política de privacidad</a>.
+      </div>
+    </div>
   </div>
 
-  <script type="module" src="./js/login.js"></script>
+  <script>
+    const form = document.getElementById('loginForm');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+
+      if (!email || !password) {
+        return Swal.fire('Atención', 'Completa todos los campos.', 'warning');
+      }
+
+      try {
+        const res = await fetch('https://backend-sigep-gc.onrender.com/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Bienvenido',
+            text: `Hola ${data.user.nombre || ''}, redirigiendo...`,
+            timer: 2000,
+            showConfirmButton: false
+          }).then(() => {
+            window.location.href = '/dashboard.html';
+          });
+        } else {
+          Swal.fire('Error', data.message || 'Credenciales incorrectas.', 'error');
+        }
+      } catch (error) {
+        Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
+      }
+    });
+  </script>
 </body>
 </html>
